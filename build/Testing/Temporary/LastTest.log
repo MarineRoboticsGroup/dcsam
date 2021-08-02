@@ -1,0 +1,52 @@
+Start testing: Aug 02 18:42 EDT
+----------------------------------------------------------
+1/1 Testing: TestDCSAM
+1/1 Test: TestDCSAM
+Command: "/home/kevin/repos/dcsam/build/tests/testDCSAM"
+Directory: /home/kevin/repos/dcsam/build/tests
+"TestDCSAM" start time: Aug 02 18:42 EDT
+Output:
+----------------------------------------------------------
+[==========] Running 10 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 10 tests from TestSuite
+[ RUN      ] TestSuite.discrete_prior_factor
+[       OK ] TestSuite.discrete_prior_factor (0 ms)
+[ RUN      ] TestSuite.smart_discrete_prior_factor
+[       OK ] TestSuite.smart_discrete_prior_factor (0 ms)
+[ RUN      ] TestSuite.dcdiscrete_mixture
+DK 1st: 7205759403792793601
+DK 2nd: 2
+[       OK ] TestSuite.dcdiscrete_mixture (0 ms)
+[ RUN      ] TestSuite.dccontinuous_mixture
+DK 1st: 7205759403792793601
+DK 2nd: 2
+[       OK ] TestSuite.dccontinuous_mixture (1 ms)
+[ RUN      ] TestSuite.simple_mixture_factor
+DK 1st: 7205759403792793601
+DK 2nd: 2
+[       OK ] TestSuite.simple_mixture_factor (0 ms)
+[ RUN      ] TestSuite.weighted_discrete
+[       OK ] TestSuite.weighted_discrete (0 ms)
+[ RUN      ] TestSuite.simple_slam_batch
+[       OK ] TestSuite.simple_slam_batch (1 ms)
+[ RUN      ] TestSuite.simple_slam_incremental
+[       OK ] TestSuite.simple_slam_incremental (2 ms)
+[ RUN      ] TestSuite.simple_discrete_dcsam
+[       OK ] TestSuite.simple_discrete_dcsam (0 ms)
+[ RUN      ] TestSuite.simple_semantic_slam
+[       OK ] TestSuite.simple_semantic_slam (5 ms)
+[----------] 10 tests from TestSuite (10 ms total)
+
+[----------] Global test environment tear-down
+[==========] 10 tests from 1 test suite ran. (10 ms total)
+[  PASSED  ] 10 tests.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TestDCSAM" end time: Aug 02 18:42 EDT
+"TestDCSAM" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 02 18:42 EDT

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdcsam.a  CMakeFiles/dcsam.dir/src/DCSAM.cpp.o CMakeFiles/dcsam.dir/src/HybridFactorGraph.cpp.o
+/usr/bin/ranlib libdcsam.a

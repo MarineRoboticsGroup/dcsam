@@ -1,0 +1,8 @@
+/home/kevin/repos/dcsam/build/CMakeFiles/rebuild_cache.dir
+/home/kevin/repos/dcsam/build/CMakeFiles/edit_cache.dir
+/home/kevin/repos/dcsam/build/CMakeFiles/test.dir
+/home/kevin/repos/dcsam/build/CMakeFiles/dcsam.dir
+/home/kevin/repos/dcsam/build/tests/CMakeFiles/rebuild_cache.dir
+/home/kevin/repos/dcsam/build/tests/CMakeFiles/edit_cache.dir
+/home/kevin/repos/dcsam/build/tests/CMakeFiles/test.dir
+/home/kevin/repos/dcsam/build/tests/CMakeFiles/testDCSAM.dir
