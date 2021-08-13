@@ -1,0 +1,86 @@
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+[Tt]humbs.db
+
+# Jupyter Notebooks #
+#####################
+.ipynb_checkpoints
+
+# Binaries #
+############
+*.pyc
+
+# Latex #
+#########
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.bbl
+*.blg
+*.toc
+*.dvi
+*.lof
+*.lot
+main.pdf
+
+# spacemacs #
+#############
+auto/
+.#*
+
+# Python #
+##########
+__pycache__/
+
+
+# PyTorch #
+###########
+*.pt
+
+# Executables/C++ #
+###################
+build/
+
+# Tensorflow #
+##############
+*.tfrecord
+*.pb
+
+# Temporary Files #
+###################
+*.*~
+*.swp
+
+# Large Files #
+###############
+*.png
+*.mp4
+*.jpg
+
+# Blender #
+###########
+*.blend
+
+# MATLAB #
+##########
+*.m~
+
+# ROS #
+#######
+*.bag
+
+# Jekyll #
+##########
+.jekyll-metadata
+.sass-cache/
+Gemfile.lock
+_site/
