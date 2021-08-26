@@ -19,6 +19,7 @@ namespace dcsam {
 using DiscreteValues = gtsam::DiscreteFactor::Values;
 
 struct DCValues {
+  DCValues() {}
   DCValues(const gtsam::Values &c, const DiscreteValues &d)
       : continuous(c), discrete(d) {}
   gtsam::Values continuous;

@@ -44,6 +44,7 @@ class DCDiscreteFactor : public gtsam::DiscreteFactor {
   gtsam::KeyVector continuousKeys_;
   boost::shared_ptr<DCFactor> dcfactor_;
   gtsam::Values continuousVals_;
+  DiscreteValues discreteVals_;
 
  public:
   using Base = gtsam::DiscreteFactor;
@@ -75,6 +76,7 @@ class DCDiscreteFactor : public gtsam::DiscreteFactor {
     dcfactor_ = rhs.dcfactor_;
     continuousKeys_ = rhs.continuousKeys_;
     continuousVals_ = rhs.continuousVals_;
+    discreteVals_ = rhs.discreteVals_;
     return *this;
   }
 
@@ -85,18 +87,19 @@ class DCDiscreteFactor : public gtsam::DiscreteFactor {
     const DCDiscreteFactor& f(static_cast<const DCDiscreteFactor&>(other));
     return (dcfactor_->equals(*f.dcfactor_) &&
             (discreteKeys_ == f.discreteKeys_) &&
-            continuousVals_.equals(f.continuousVals_));
+            continuousVals_.equals(f.continuousVals_) &&
+            discreteVals_ == f.discreteVals_);
   }
 
   gtsam::DecisionTreeFactor toDecisionTreeFactor() const {
     assert(allInitialized());
-    return dcfactor_->toDecisionTreeFactor(continuousVals_);
+    return dcfactor_->toDecisionTreeFactor(continuousVals_, discreteVals_);
   }
 
   gtsam::DecisionTreeFactor operator*(
       const gtsam::DecisionTreeFactor& f) const {
     assert(allInitialized());
-    return dcfactor_->conditionalTimes(f, continuousVals_);
+    return dcfactor_->conditionalTimes(f, continuousVals_, discreteVals_);
   }
 
   double operator()(const DiscreteValues& values) const {
@@ -121,9 +124,20 @@ class DCDiscreteFactor : public gtsam::DiscreteFactor {
     }
   }
 
+  void updateDiscrete(const DiscreteValues& discreteVals) {
+    for (const gtsam::DiscreteKey& dk : discreteKeys_) {
+      const gtsam::Key k = dk.first;
+      if (discreteVals.find(k) != discreteVals.end())
+        discreteVals_[k] = discreteVals.at(k);
+    }
+  }
+
   bool allInitialized() const {
     for (const gtsam::Key& k : continuousKeys_) {
       if (!continuousVals_.exists(k)) return false;
+    }
+    for (const gtsam::Key k : keys_) {
+      if (discreteVals_.find(k) == discreteVals_.end()) return false;
     }
     return true;
   }

@@ -148,10 +148,12 @@ class DCFactor : public gtsam::Factor {
    * https://github.com/borglab/gtsam/blob/43e8f1e5aeaf11890262722c1e5e04a11dbf9d75/gtsam_unstable/discrete/AllDiff.cpp#L43
    *
    * @param continuousVals - an assignment to the continuous variables
+   * @param discreteVals -
    * @return a gtsam::DecisionTreeFactor implementing this DCFactor.
    */
   virtual gtsam::DecisionTreeFactor toDecisionTreeFactor(
-      const gtsam::Values& continuousVals) const {
+      const gtsam::Values& continuousVals,
+      const DiscreteValues& discreteVals) const {
     gtsam::DecisionTreeFactor converted;
     for (const gtsam::DiscreteKey& dkey : discreteKeys_) {
       std::vector<double> probs = evalProbs(dkey, continuousVals);
@@ -161,6 +163,67 @@ class DCFactor : public gtsam::Factor {
       converted = converted * unary;
     }
     return converted;
+  }
+
+  /**
+   * Calculate a normalizing constant for this DCFactor. Most implementations
+   * will be able to use the helper function nonlinearFactorLogNormalizingConstant
+   * provided below for most of the calculation.
+   * TODO(Kurran) is this the cleanest way to do this? Seems necessary for the
+   * DCMaxMixtureFactor implementations etc...
+   */
+  virtual double logNormalizingConstant(const gtsam::Values& values) const {
+    throw std::logic_error("Normalizing constant not implemented."
+      "One or more of the factors in use requires access to the normalization"
+      "constant for a child class of DCFactor, but`logNormalizingConstant` "
+      "has not been overridden.");
+  }
+
+  /**
+   * Default for computing the _negative_ normalizing constant for the measurement
+   * likelihood (since we are minimizing the _negative_ log-likelihood), to be used
+   * as a utility for computing the DCFactorLogNormalizingConstant.
+   */
+  template <typename NonlinearFactorType>
+  double nonlinearFactorLogNormalizingConstant(
+      const NonlinearFactorType& factor, const gtsam::Values& values) const {
+    // Information matrix (inverse covariance matrix) for the factor.
+    gtsam::Matrix infoMat;
+
+    // NOTE: This is sloppy, is there a cleaner way?
+    boost::shared_ptr<NonlinearFactorType> fPtr =
+        boost::make_shared<NonlinearFactorType>(factor);
+    boost::shared_ptr<NonlinearFactorType> factorPtr(fPtr);
+
+    // If this is a NoiseModelFactor, we'll use its noiseModel to
+    // otherwise noiseModelFactor will be nullptr
+    boost::shared_ptr<gtsam::NoiseModelFactor> noiseModelFactor =
+        boost::dynamic_pointer_cast<gtsam::NoiseModelFactor>(factorPtr);
+    if (noiseModelFactor) {
+      // If dynamic cast to NoiseModelFactor succeeded, see if the noise model
+      // is Gaussian
+      gtsam::noiseModel::Base::shared_ptr noiseModel =
+          noiseModelFactor->noiseModel();
+
+      boost::shared_ptr<gtsam::noiseModel::Gaussian> gaussianNoiseModel =
+          boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(noiseModel);
+      if (gaussianNoiseModel) {
+        // If the noise model is Gaussian, retrieve the information matrix
+        infoMat = gaussianNoiseModel->information();
+      } else {
+        // If the factor is not a Gaussian factor, we'll linearize it to get
+        // something with a normalized noise model
+        // TODO(kevin): does this make sense to do? I think maybe not in
+        // general? Should we just yell at the user?
+        boost::shared_ptr<gtsam::GaussianFactor> gaussianFactor =
+            factor.linearize(values);
+        infoMat = gaussianFactor->information();
+      }
+    }
+
+    // Compute the (negative) log of the normalizing constant
+    return -(factor.dim() * log(2.0 * M_PI) / 2.0) -
+           (log(infoMat.determinant()) / 2.0);
   }
 
   /**
@@ -219,10 +282,9 @@ class DCFactor : public gtsam::Factor {
    * with `f`.
    */
   gtsam::DecisionTreeFactor conditionalTimes(
-      const gtsam::DecisionTreeFactor& f,
-      const gtsam::Values& continuousVals) const {
-    return toDecisionTreeFactor(continuousVals) * f;
+      const gtsam::DecisionTreeFactor& f, const gtsam::Values& continuousVals,
+      const DiscreteValues& discreteVals) const {
+    return toDecisionTreeFactor(continuousVals, discreteVals) * f;
   }
 };
-
 }  // namespace dcsam

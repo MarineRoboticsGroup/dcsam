@@ -21,6 +21,9 @@ set(DCSAM_HDRS
   include/dcsam/DiscretePriorFactor.h
   include/dcsam/SmartDiscretePriorFactor.h
   include/dcsam/HybridFactorGraph.h
+  include/dcsam/SemanticBearingRangeFactor.h
+  include/dcsam/SmartSemanticBearingRangeFactor.h
+  include/dcsam/DCMaxMixtureFactor.h
   )
 
 set(DCSAM_SRCS

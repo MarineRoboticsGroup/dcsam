@@ -29,9 +29,11 @@
 // Our custom DCSAM includes
 #include "dcsam/DCContinuousFactor.h"
 #include "dcsam/DCDiscreteFactor.h"
+#include "dcsam/DCMaxMixtureFactor.h"
 #include "dcsam/DCMixtureFactor.h"
 #include "dcsam/DCSAM.h"
 #include "dcsam/DiscretePriorFactor.h"
+#include "dcsam/SemanticBearingRangeFactor.h"
 #include "dcsam/SmartDiscretePriorFactor.h"
 
 const double tol = 1e-7;
@@ -217,6 +219,11 @@ TEST(TestSuite, dcdiscrete_mixture) {
   double initVal = -2.5;
   initialGuess.insert(x1, initVal);
 
+  // We also need an initial guess for the discrete variables (this will only be
+  // used if it is needed by your factors), here it is ignored.
+  DiscreteValues initialGuessDiscrete;
+  initialGuessDiscrete[dk.first] = 0;
+
   // Let's make a discrete factor graph
   gtsam::DiscreteFactorGraph dfg;
 
@@ -230,7 +237,10 @@ TEST(TestSuite, dcdiscrete_mixture) {
   for (size_t j = 0; j < dfg.size(); j++) {
     boost::shared_ptr<DCDiscreteFactor> dcDiscreteFactor =
         boost::dynamic_pointer_cast<DCDiscreteFactor>(dfg[j]);
-    if (dcDiscreteFactor) dcDiscreteFactor->updateContinuous(initialGuess);
+    if (dcDiscreteFactor) {
+      dcDiscreteFactor->updateContinuous(initialGuess);
+      dcDiscreteFactor->updateDiscrete(initialGuessDiscrete);
+    }
   }
 
   // Solve for discrete given continuous
@@ -334,6 +344,11 @@ TEST(TestSuite, dccontinuous_mixture) {
   plt::scatter(initVec, initErrorNH, {{"color", "r"}});
 #endif
 
+  // We also need an initial guess for the discrete variables (this will only be
+  // used if it is needed by your factors), here it is ignored.
+  DiscreteValues initialGuessDiscrete;
+  initialGuessDiscrete[dk.first] = 0;
+
   // Let's make some factor graphs
   gtsam::DiscreteFactorGraph dfg;
   gtsam::NonlinearFactorGraph graph;
@@ -350,7 +365,10 @@ TEST(TestSuite, dccontinuous_mixture) {
   for (size_t j = 0; j < dfg.size(); j++) {
     boost::shared_ptr<DCDiscreteFactor> dcDiscreteFactor =
         boost::dynamic_pointer_cast<DCDiscreteFactor>(dfg[j]);
-    if (dcDiscreteFactor) dcDiscreteFactor->updateContinuous(initialGuess);
+    if (dcDiscreteFactor) {
+      dcDiscreteFactor->updateContinuous(initialGuess);
+      dcDiscreteFactor->updateDiscrete(initialGuessDiscrete);
+    }
   }
 
   // Solve for discrete given continuous
@@ -401,6 +419,8 @@ TEST(TestSuite, dccontinuous_mixture) {
     boost::shared_ptr<DCDiscreteFactor> dcDiscreteFactor =
         boost::dynamic_pointer_cast<DCDiscreteFactor>(dfg[j]);
     if (dcDiscreteFactor) dcDiscreteFactor->updateContinuous(values);
+    // NOTE: we won't updateDiscrete explicitly here anymore, because we don't
+    // need to.
   }
 
   // Re-solve discrete to verify that output has switched
@@ -490,11 +510,16 @@ TEST(TestSuite, simple_mixture_factor) {
   plt::scatter(initVec, initErrorNH, {{"color", "r"}});
 #endif
 
+  // We also need an initial guess for the discrete variables (this will only be
+  // used if it is needed by your factors), here it is ignored.
+  DiscreteValues initialGuessDiscrete;
+  initialGuessDiscrete[dk.first] = 0;
+
   // Let's make a solver
   DCSAM dcsam;
 
   // Add the HybridFactorGraph to DCSAM
-  dcsam.update(hfg, initialGuess);
+  dcsam.update(hfg, initialGuess, initialGuessDiscrete);
 
   // Solve
   DCValues dcvals = dcsam.calculateEstimate();
@@ -523,65 +548,6 @@ TEST(TestSuite, simple_mixture_factor) {
   // Ensure that the prediction is correct
   size_t mpeD = dcvals.discrete.at(dk.first);
   EXPECT_EQ(mpeD, 0);
-}
-
-/**
- * TODO(kevin): This simple test is to better understand the behavior of the
- * GTSAM discrete solver with discrete factor weights that do not sum to one. We
- * need to know how GTSAM works in this setting because of the way EM works.
- */
-TEST(TestSuite, weighted_discrete) {
-  // Make an empty discrete factor graph
-  gtsam::DiscreteFactorGraph dfg;
-
-  // We'll make a variable with 2 possible assignments
-  const size_t cardinality = 2;
-  gtsam::DiscreteKey dk(gtsam::Symbol('d', 1), cardinality);
-
-  /// Make a discrete prior factor and add it to the graph
-
-  // This first factor will have weight = 1 (so it will sum to 1)
-  const std::vector<double> probs{0.1, 0.9};
-
-  DiscretePriorFactor dpf(dk, probs);
-  dfg.push_back(dpf);
-
-  // Solve
-  gtsam::DiscreteFactor::sharedValues mostProbableEstimate = dfg.optimize();
-
-  // Initially MPE should be = 1 (based on probs)
-  EXPECT_EQ((*mostProbableEstimate).at(dk.first), 1);
-
-  // Get the marginals
-  gtsam::DiscreteMarginals discreteMarginals(dfg);
-  gtsam::Vector margProbs = discreteMarginals.marginalProbabilities(dk);
-
-  for (size_t i = 0; i < margProbs.size(); i++) {
-    bool margWithinTol = (abs(margProbs[i] - probs[i]) < tol);
-    EXPECT_EQ(margWithinTol, true);
-  }
-
-  /// Make a new discrete prior factor and add it to the graph
-  // Weighted probs don't sum to 1
-  const std::vector<double> weighted_probs{45, 5};
-  DiscretePriorFactor weighted_dpf(dk, weighted_probs);
-
-  dfg.push_back(weighted_dpf);
-
-  gtsam::DiscreteFactor::sharedValues newMostProbableEstimate = dfg.optimize();
-
-  // Since the marg probs will now be 0.5, 0.5 (GTSAM normalizes internally),
-  // the most probable estimate will go to the first value in the sequence, 0
-  EXPECT_EQ((*newMostProbableEstimate).at(dk.first), 0);
-
-  // Get the new marginals
-  gtsam::DiscreteMarginals newDiscreteMarginals(dfg);
-  gtsam::Vector newMargProbs = newDiscreteMarginals.marginalProbabilities(dk);
-
-  for (size_t i = 0; i < newMargProbs.size(); i++) {
-    bool margWithinTol = (abs(newMargProbs[i] - 0.5) < tol);
-    EXPECT_EQ(margWithinTol, true);
-  }
 }
 
 /**
@@ -744,8 +710,12 @@ TEST(TestSuite, simple_discrete_dcsam) {
   DiscretePriorFactor dpf(dk, probs);
   hfg.push_discrete(dpf);
 
+  // Initial guess for discrete values (only used in certain circumstances)
+  DiscreteValues initialGuessDiscrete;
+  initialGuessDiscrete[dk.first] = 1;
+
   // Update DCSAM with the new factor
-  dcsam.update(hfg);
+  dcsam.update(hfg, initialGuessDiscrete);
 
   // Solve
   DCValues dcvals = dcsam.calculateEstimate();
@@ -768,6 +738,8 @@ TEST(TestSuite, simple_semantic_slam) {
 
   // Values for initial guess
   gtsam::Values initialGuess;
+  // Initial guess for discrete values (only used in certain circumstances)
+  DiscreteValues initialGuessDiscrete;
 
   gtsam::Symbol x0('x', 0);
   gtsam::Symbol l1('l', 1);
@@ -803,17 +775,22 @@ TEST(TestSuite, simple_semantic_slam) {
   initialGuess.insert(x0, pose0);
   initialGuess.insert(l1, landmark1);
 
+  // Set initial guess for discrete class var (ignored internally; only used for
+  // MaxMixtures and SumMixtures)
+  initialGuessDiscrete[lm1_class.first] = 0;
+
   hfg.push_nonlinear(p0);
   hfg.push_discrete(plc1);
 
   // Setup dcsam
   DCSAM dcsam;
-  dcsam.update(hfg, initialGuess);
+  dcsam.update(hfg, initialGuess, initialGuessDiscrete);
 
   DCValues dcval_start = dcsam.calculateEstimate();
 
   hfg.clear();
   initialGuess.clear();
+  initialGuessDiscrete.clear();
 
   gtsam::Pose2 odom(pose0);
   gtsam::Pose2 noise(0.01, 0.01, 0.01);
@@ -912,6 +889,459 @@ TEST(TestSuite, simple_semantic_slam) {
 #endif
 
   EXPECT_EQ(true, true);
+}
+
+/**
+ * This unit test verifies that DCFactors added to a DCSAM instance which depend
+ * on *previously solved* variables have those variables correctly initialized.
+ *
+ * The reason we EXPECT_EQ(true, true) is because this test will abort with a
+ * failed assertion `allInitialized() == true` in the DCFactor if it does not
+ * pass.
+ */
+TEST(TestSuite, dcsam_initialization) {
+  // Make a factor graph.
+  HybridFactorGraph hfg;
+
+  // Values for initial guess.
+  gtsam::Values initialGuess;
+  // Initial guess for discrete variables.
+  DiscreteValues initialGuessDiscrete;
+
+  gtsam::Symbol x0('x', 0);
+  gtsam::Symbol l1('l', 1);
+  gtsam::Symbol lc1('c', 1);
+
+  // Create a discrete key for landmark 1 class with cardinality 2.
+  gtsam::DiscreteKey lm1_class(lc1, 2);
+
+  // Set up initial pose
+  gtsam::Pose2 pose0(0, 0, 0);
+
+  double prior_sigma = 0.1;
+  double meas_sigma = 1.0;
+  gtsam::Point2 landmark1(1.0, 1.0);
+
+  /// Noise models for measurements and priors
+  // Prior noise for pose and landmarks.
+  gtsam::noiseModel::Isotropic::shared_ptr prior_noise =
+      gtsam::noiseModel::Isotropic::Sigma(3, prior_sigma);
+  gtsam::noiseModel::Isotropic::shared_ptr prior_lm_noise =
+      gtsam::noiseModel::Isotropic::Sigma(2, prior_sigma);
+
+  // 0.1 rad std on bearing, 10cm on range.
+  gtsam::noiseModel::Isotropic::shared_ptr br_noise =
+      gtsam::noiseModel::Isotropic::Sigma(2, 0.1);
+
+  // Landmark 1 initial class estimate.
+  std::vector<double> prior_lm1_class;
+  prior_lm1_class.push_back(0.9);
+  prior_lm1_class.push_back(0.1);
+
+  // Add prior factors to the graph and solve.
+  gtsam::PriorFactor<gtsam::Pose2> p0(x0, pose0, prior_noise);
+  gtsam::PriorFactor<gtsam::Point2> pl1(l1, landmark1, prior_lm_noise);
+  DiscretePriorFactor plc1(lm1_class, prior_lm1_class);
+
+  initialGuess.insert(x0, pose0);
+  initialGuess.insert(l1, landmark1);
+  // Add initial guess for discrete vars (only used for mixtures)
+  initialGuessDiscrete[lm1_class.first] = 0;
+
+  hfg.push_nonlinear(p0);
+  hfg.push_discrete(plc1);
+
+  // Setup dcsam
+  DCSAM dcsam;
+  dcsam.update(hfg, initialGuess, initialGuessDiscrete);
+
+  DCValues dcval_start = dcsam.calculateEstimate();
+  std::cout << "Printing first values" << std::endl;
+  dcval_start.discrete.print();
+
+  hfg.clear();
+  initialGuess.clear();
+  initialGuessDiscrete.clear();
+
+  /**
+   * Now DCSAM should have an estimate of the continuous values based on the
+   * previous solve. We'll add a new DCFactor now which depends on x0 and l1,
+   * but does not explicitly initialize them again when the new factor is added.
+   */
+
+  // Add bearing-range measurement from pose (x, y, theta) = (0, 0, 0) to
+  // landmark (x, y) = (1, 1)
+  gtsam::Rot2 bearing = gtsam::Rot2::fromDegrees(45);
+  double range = sqrt(2);
+  gtsam::BearingRangeFactor<gtsam::Pose2, gtsam::Point2> brfactor(
+      x0, l1, bearing, range, br_noise);
+
+  // Set a semantic bearing-range factor up with BR measurement above and
+  // semantic measurement equal to the landmark class prior.
+  gtsam::KeyVector lm_keys{x0, l1};
+  hfg.push_dc(SemanticBearingRangeFactor<gtsam::Pose2, gtsam::Point2>(
+      x0, l1, lm1_class, prior_lm1_class, bearing, range, br_noise));
+
+  // If DCSAM isn't initializing `x0` and `l1` properly for the new factor, this
+  // will fail.
+  dcsam.update(hfg);
+
+  // Attempt a solve if we made it this far.
+  DCValues dcval_final = dcsam.calculateEstimate();
+
+  // If we made it here without an AssertionError, the test passed.
+  EXPECT_EQ(true, true);
+}
+
+/**
+ * This is a basic qualitative octagonal pose graph SLAM test modified to use
+ * bearing-range measurements on a *semantic* landmark to verify that DCSAM
+ * works on semantic bearing-range measurement SLAM examples in the
+ * *incremental* setting
+ */
+TEST(TestSuite, bearing_range_semantic_slam) {
+  // Make a factor graph
+  HybridFactorGraph hfg;
+
+  // Values for initial guess
+  gtsam::Values initialGuess;
+  DiscreteValues initialGuessDiscrete;
+
+  gtsam::Symbol x0('x', 0);
+  gtsam::Symbol l1('l', 1);
+  gtsam::Symbol lc1('c', 1);
+  // Create a discrete key for landmark 1 class with cardinality 2.
+  gtsam::DiscreteKey lm1_class(lc1, 2);
+  gtsam::Pose2 pose0(0, 0, 0);
+  gtsam::Pose2 dx(1, 0, 0.78539816);
+  double prior_sigma = 0.1;
+  double meas_sigma = 1.0;
+  double circumradius = (std::sqrt(4 + 2 * std::sqrt(2))) / 2.0;
+  gtsam::Point2 landmark1(circumradius, circumradius);
+
+  gtsam::noiseModel::Isotropic::shared_ptr prior_noise =
+      gtsam::noiseModel::Isotropic::Sigma(3, prior_sigma);
+  gtsam::noiseModel::Isotropic::shared_ptr prior_lm_noise =
+      gtsam::noiseModel::Isotropic::Sigma(2, prior_sigma);
+  gtsam::noiseModel::Isotropic::shared_ptr meas_noise =
+      gtsam::noiseModel::Isotropic::Sigma(3, meas_sigma);
+
+  // 0.1 rad std on bearing, 10cm on range
+  gtsam::noiseModel::Isotropic::shared_ptr br_noise =
+      gtsam::noiseModel::Isotropic::Sigma(2, 0.1);
+
+  std::vector<double> prior_lm1_class;
+  prior_lm1_class.push_back(0.9);
+  prior_lm1_class.push_back(0.1);
+
+  gtsam::PriorFactor<gtsam::Pose2> p0(x0, pose0, prior_noise);
+  gtsam::PriorFactor<gtsam::Point2> pl1(l1, landmark1, prior_lm_noise);
+  DiscretePriorFactor plc1(lm1_class, prior_lm1_class);
+
+  initialGuess.insert(x0, pose0);
+  initialGuess.insert(l1, landmark1);
+  initialGuessDiscrete[lm1_class.first] = 0;
+
+  hfg.push_nonlinear(p0);
+  hfg.push_nonlinear(pl1);
+  hfg.push_discrete(plc1);
+
+  // Setup dcsam
+  DCSAM dcsam;
+  dcsam.update(hfg, initialGuess, initialGuessDiscrete);
+
+  DCValues dcval_start = dcsam.calculateEstimate();
+  std::cout << "Printing first values" << std::endl;
+  dcval_start.discrete.print();
+
+  hfg.clear();
+  initialGuess.clear();
+  initialGuessDiscrete.clear();
+
+  gtsam::Pose2 odom(pose0);
+  gtsam::Pose2 noise(0.01, 0.01, 0.01);
+  for (size_t i = 0; i < 7; i++) {
+    gtsam::Symbol xi('x', i);
+    gtsam::Symbol xj('x', i + 1);
+
+    gtsam::Pose2 meas = dx * noise;
+
+    gtsam::BetweenFactor<gtsam::Pose2> bw(xi, xj, meas, meas_noise);
+    hfg.push_nonlinear(bw);
+
+    // Add semantic bearing-range measurement to landmark in center
+    gtsam::Rot2 bearing1 = gtsam::Rot2::fromDegrees(67.5);
+    double range1 = circumradius;
+
+    // For the first couple measurements, pick class=0, later pick class=1
+    std::vector<double> semantic_meas;
+    if (i < 2) {
+      semantic_meas.push_back(0.9);
+      semantic_meas.push_back(0.1);
+    } else {
+      semantic_meas.push_back(0.1);
+      semantic_meas.push_back(0.9);
+    }
+
+    hfg.push_dc(SemanticBearingRangeFactor<gtsam::Pose2, gtsam::Point2>(
+        xi, l1, lm1_class, semantic_meas, bearing1, range1, br_noise));
+
+    odom = odom * meas;
+    initialGuess.insert(xj, odom);
+    dcsam.update(hfg, initialGuess);
+
+    DCValues dcvals = dcsam.calculateEstimate();
+
+    size_t mpeClassL1 = dcvals.discrete.at(lc1);
+
+    // Plot poses and landmarks
+#ifdef ENABLE_PLOTTING
+    std::vector<double> xs, ys;
+    for (size_t j = 0; j < i + 2; j++) {
+      xs.push_back(
+          dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', j)).x());
+      ys.push_back(
+          dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', j)).y());
+    }
+
+    std::vector<double> lmxs, lmys;
+    lmxs.push_back(
+        dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).x());
+    lmys.push_back(
+        dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).y());
+
+    string color = (mpeClassL1 == 0) ? "b" : "orange";
+
+    plt::plot(xs, ys);
+    plt::scatter(lmxs, lmys, {{"color", color}});
+    plt::show();
+#endif
+
+    hfg.clear();
+    initialGuess.clear();
+  }
+
+  gtsam::Symbol x7('x', 7);
+  gtsam::BetweenFactor<gtsam::Pose2> bw(x0, x7, dx * noise, meas_noise);
+
+  hfg.push_nonlinear(bw);
+  dcsam.update(hfg, initialGuess);
+
+  DCValues dcvals = dcsam.calculateEstimate();
+
+  size_t mpeClassL1 = dcvals.discrete.at(lc1);
+
+  // Plot the poses and landmarks
+#ifdef ENABLE_PLOTTING
+  std::vector<double> xs, ys;
+  for (size_t i = 0; i < 8; i++) {
+    xs.push_back(dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', i)).x());
+    ys.push_back(dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', i)).y());
+  }
+
+  std::vector<double> lmxs, lmys;
+  lmxs.push_back(
+      dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).x());
+  lmys.push_back(
+      dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).y());
+
+  string color = (mpeClassL1 == 0) ? "b" : "orange";
+
+  plt::plot(xs, ys);
+  plt::scatter(lmxs, lmys, {{"color", color}});
+  plt::show();
+#endif
+
+  EXPECT_EQ(mpeClassL1, 1);
+}
+
+/**
+ * This is a basic qualitative octagonal pose graph SLAM test modified to use a
+ * mixture of semantic bearing-range measurements on two *semantic* landmarks
+ * to verify that DCSAM works for semantic max-mixtures.
+ */
+TEST(TestSuite, dcMaxMixture_semantic_slam) {
+  // Make a factor graph
+  HybridFactorGraph hfg;
+
+  // Values for initial guess
+  gtsam::Values initialGuess;
+  DiscreteValues initialGuessDiscrete;
+
+  gtsam::Symbol x0('x', 0);
+  gtsam::Symbol l1('l', 1);
+  gtsam::Symbol lc1('c', 1);
+  // Create a discrete key for landmark 1 class with cardinality 2.
+  gtsam::DiscreteKey lm1_class(lc1, 2);
+  gtsam::Pose2 pose0(0, 0, 0);
+  gtsam::Pose2 dx(1, 0, 0.78539816);
+  double prior_sigma = 0.1;
+  double meas_sigma = 1.0;
+  double circumradius = (std::sqrt(4 + 2 * std::sqrt(2))) / 2.0;
+  gtsam::Point2 landmark1(circumradius, circumradius);
+
+  gtsam::noiseModel::Isotropic::shared_ptr prior_noise =
+      gtsam::noiseModel::Isotropic::Sigma(3, prior_sigma);
+  gtsam::noiseModel::Isotropic::shared_ptr prior_lm_noise =
+      gtsam::noiseModel::Isotropic::Sigma(2, prior_sigma);
+  gtsam::noiseModel::Isotropic::shared_ptr meas_noise =
+      gtsam::noiseModel::Isotropic::Sigma(3, meas_sigma);
+
+  // 0.1 rad std on bearing, 10cm on range
+  gtsam::noiseModel::Isotropic::shared_ptr br_noise =
+      gtsam::noiseModel::Isotropic::Sigma(2, 0.1);
+
+  std::vector<double> prior_lm1_class;
+  prior_lm1_class.push_back(0.9);
+  prior_lm1_class.push_back(0.1);
+
+  gtsam::PriorFactor<gtsam::Pose2> p0(x0, pose0, prior_noise);
+  gtsam::PriorFactor<gtsam::Point2> pl1(l1, landmark1, prior_lm_noise);
+  DiscretePriorFactor plc1(lm1_class, prior_lm1_class);
+
+  initialGuess.insert(x0, pose0);
+  initialGuess.insert(l1, landmark1);
+  initialGuessDiscrete[lm1_class.first] = 0;
+
+  hfg.push_nonlinear(p0);
+  hfg.push_nonlinear(pl1);
+  hfg.push_discrete(plc1);
+
+  // set up for landmark 2
+  gtsam::Symbol l2('l', 2);
+  gtsam::Symbol lc2('c', 2);
+  // Create a discrete key for landmark 2 class with cardinality 2.
+  gtsam::DiscreteKey lm2_class(lc2, 2);
+  gtsam::Point2 landmark2(circumradius + .5, circumradius + 5);
+
+  std::vector<double> prior_lm2_class;
+  prior_lm2_class.push_back(0.1);
+  prior_lm2_class.push_back(0.9);
+
+  gtsam::PriorFactor<gtsam::Point2> pl2(l2, landmark2, prior_lm_noise);
+  DiscretePriorFactor plc2(lm2_class, prior_lm2_class);
+
+  initialGuess.insert(l2, landmark2);
+  initialGuessDiscrete[lm2_class.first] = 1;
+
+  hfg.push_nonlinear(pl2);
+  hfg.push_discrete(plc2);
+
+  // Setup dcsam
+  DCSAM dcsam;
+  dcsam.update(hfg, initialGuess, initialGuessDiscrete);
+
+  DCValues dcval_start = dcsam.calculateEstimate();
+  std::cout << "Printing first values" << std::endl;
+  dcval_start.discrete.print();
+
+  hfg.clear();
+  initialGuess.clear();
+  initialGuessDiscrete.clear();
+
+  gtsam::Pose2 odom(pose0);
+  gtsam::Pose2 noise(0.01, 0.01, 0.01);
+  for (size_t i = 0; i < 7; i++) {
+    gtsam::Symbol xi('x', i);
+    gtsam::Symbol xj('x', i + 1);
+
+    gtsam::Pose2 meas = dx * noise;
+
+    gtsam::BetweenFactor<gtsam::Pose2> bw(xi, xj, meas, meas_noise);
+    hfg.push_nonlinear(bw);
+
+    // Add semantic bearing-range measurement to landmark in center
+    gtsam::Rot2 bearing1 = gtsam::Rot2::fromDegrees(67.5);
+    double range1 = circumradius;
+
+    // For the first couple measurements, pick class=0, later pick class=1
+    std::vector<double> semantic_meas;
+    if (i < 2) {
+      semantic_meas.push_back(0.9);
+      semantic_meas.push_back(0.1);
+    } else {
+      semantic_meas.push_back(0.1);
+      semantic_meas.push_back(0.9);
+    }
+
+    gtsam::DiscreteKeys dks({lm1_class, lm2_class});
+
+    // build mixture: dcmaxmixture should be picking the component for lm1
+    SemanticBearingRangeFactor<gtsam::Pose2, gtsam::Point2> sbr1(
+                xi, l1, lm1_class, semantic_meas, bearing1, range1, br_noise);
+    SemanticBearingRangeFactor<gtsam::Pose2, gtsam::Point2> sbr2(
+                xi, l2, lm2_class, semantic_meas, bearing1, range1, br_noise);
+    DCMaxMixtureFactor<SemanticBearingRangeFactor<gtsam::Pose2,
+                                                  gtsam::Point2>> dcmmf(
+                            {xi, l1, l2}, dks, {sbr1, sbr2}, {.5, .5}, false);
+
+    hfg.push_dc(dcmmf);
+    odom = odom * meas;
+    initialGuess.insert(xj, odom);
+    dcsam.update(hfg, initialGuess);
+    DCValues dcvals = dcsam.calculateEstimate();
+
+    size_t mpeClassL1 = dcvals.discrete.at(lc1);
+
+    // Plot poses and landmarks
+#ifdef ENABLE_PLOTTING
+    std::vector<double> xs, ys;
+    for (size_t j = 0; j < i + 2; j++) {
+      xs.push_back(
+          dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', j)).x());
+      ys.push_back(
+          dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', j)).y());
+    }
+
+    std::vector<double> lmxs, lmys;
+    lmxs.push_back(
+        dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).x());
+    lmys.push_back(
+        dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).y());
+
+    string color = (mpeClassL1 == 0) ? "b" : "orange";
+
+    plt::plot(xs, ys);
+    plt::scatter(lmxs, lmys, {{"color", color}});
+    plt::show();
+#endif
+
+    hfg.clear();
+    initialGuess.clear();
+  }
+
+  gtsam::Symbol x7('x', 7);
+  gtsam::BetweenFactor<gtsam::Pose2> bw(x0, x7, dx * noise, meas_noise);
+
+  hfg.push_nonlinear(bw);
+  dcsam.update(hfg, initialGuess);
+
+  DCValues dcvals = dcsam.calculateEstimate();
+
+  size_t mpeClassL1 = dcvals.discrete.at(lc1);
+
+  // Plot the poses and landmarks
+#ifdef ENABLE_PLOTTING
+  std::vector<double> xs, ys;
+  for (size_t i = 0; i < 8; i++) {
+    xs.push_back(dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', i)).x());
+    ys.push_back(dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', i)).y());
+  }
+
+  std::vector<double> lmxs, lmys;
+  lmxs.push_back(
+      dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).x());
+  lmys.push_back(
+      dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).y());
+
+  string color = (mpeClassL1 == 0) ? "b" : "orange";
+
+  plt::plot(xs, ys);
+  plt::scatter(lmxs, lmys, {{"color", color}});
+  plt::show();
+#endif
+
+  EXPECT_EQ(mpeClassL1, 1);
 }
 
 int main(int argc, char** argv) {

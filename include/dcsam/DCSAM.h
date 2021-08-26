@@ -74,7 +74,8 @@ class DCSAM {
    */
   void update(const gtsam::NonlinearFactorGraph &graph,
               const gtsam::DiscreteFactorGraph &dfg, const DCFactorGraph &dcfg,
-              const gtsam::Values &initialGuess = gtsam::Values());
+              const gtsam::Values &initialGuessContinuous = gtsam::Values(),
+              const DiscreteValues &initialGuessDiscrete = DiscreteValues());
 
   /**
    * A HybridFactorGraph is a container holding a NonlinearFactorGraph, a
@@ -86,7 +87,17 @@ class DCSAM {
    * initialGuess);
    */
   void update(const HybridFactorGraph &hfg,
-              const gtsam::Values &initialGuess = gtsam::Values());
+              const gtsam::Values &initialGuessContinuous = gtsam::Values(),
+              const DiscreteValues &initialGuessDiscrete = DiscreteValues());
+
+  /**
+   * Inline convenience function to allow "skipping" the initial guess for
+   * continuous variables while adding an initial guess for discrete variables.
+   */
+  inline void update(const HybridFactorGraph &hfg,
+                     const DiscreteValues &initialGuessDiscrete) {
+    update(hfg, gtsam::Values(), initialGuessDiscrete);
+  }
 
   /**
    * Simply used to call `update` without any new factors. Runs an iteration of
@@ -107,7 +118,8 @@ class DCSAM {
    * thereof).
    */
   void updateDiscrete(const gtsam::DiscreteFactorGraph &graph,
-                      const gtsam::Values &values);
+                      const gtsam::Values &continuousVals,
+                      const DiscreteValues &discreteVals);
 
   /**
    * For any factors in `dfg_`, update their stored local continuous information
@@ -119,7 +131,8 @@ class DCSAM {
    * @param values - an assignment to the continuous variables (or subset
    * thereof).
    */
-  void updateDiscreteInfo(const gtsam::Values &values);
+  void updateDiscreteInfo(const gtsam::Values &continuousVals,
+                          const DiscreteValues &discreteVals);
 
   /**
    * At the moment, this just calls `isam_.update()` internally
@@ -186,12 +199,18 @@ class DCSAM {
 
   gtsam::DiscreteFactorGraph getDiscreteFactorGraph() const { return dfg_; }
 
+  gtsam::NonlinearFactorGraph getNonlinearFactorGraph() const {
+    return isam_.getFactorsUnsafe();
+  }
+
  private:
   // Global factor graph and iSAM2 instance
   gtsam::NonlinearFactorGraph fg_;  // NOTE: unused
   gtsam::ISAM2Params isam_params_;
   gtsam::ISAM2 isam_;
   gtsam::DiscreteFactorGraph dfg_;
+  gtsam::Values currContinuous_;
+  DiscreteValues currDiscrete_;
 
   // NOTE: will be needed for more sophisticated iSAM2 bookkeeping (rather than
   // naively iterating over all factors as we do now)

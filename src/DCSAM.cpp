@@ -2,7 +2,7 @@
  * @file DCSAM.cpp
  * @brief Discrete-Continuous Smoothing and Mapping for Factored Models
  * @author Kevin Doherty, kdoherty@mit.edu
- * Copyright 2021 The Ambitious Folks of the MRG
+ * Copyright 2020 The Ambitious Folks of the MRG
  *
  */
 
@@ -23,10 +23,34 @@ DCSAM::DCSAM() {
 
 void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
                    const gtsam::DiscreteFactorGraph &dfg,
-                   const DCFactorGraph &dcfg, const gtsam::Values &values) {
+                   const DCFactorGraph &dcfg,
+                   const gtsam::Values &initialGuessContinuous,
+                   const DiscreteValues &initialGuessDiscrete) {
+  // First things first: combine currContinuous_ estimate with the new values
+  // from initialGuessContinuous to produce the full continuous variable state.
+  for (const gtsam::Key k : initialGuessContinuous.keys()) {
+    if (currContinuous_.exists(k))
+      currContinuous_.update(k, initialGuessContinuous.at(k));
+    else
+      currContinuous_.insert(k, initialGuessContinuous.at(k));
+  }
+
+  // Also combine currDiscrete_ estimate with new values from
+  // initialGuessDiscrete to give a full discrete variable state.
+  for (const auto &kv : initialGuessDiscrete) {
+    // This will update the element with key `kv.first` if one exists, or add a
+    // new element with key `kv.first` if not.
+    currDiscrete_[kv.first] = initialGuessDiscrete.at(kv.first);
+  }
+
+  // We'll combine the nonlinear factors with DCContinuous factors before
+  // passing to the continuous solver; likewise for the discrete factors and
+  // DCDiscreteFactors.
   gtsam::NonlinearFactorGraph combined;
   gtsam::DiscreteFactorGraph discreteCombined;
 
+  // Populate combined and discreteCombined with the provided nonlinear and
+  // discrete factors, respectively.
   for (auto &factor : graph) combined.add(factor);
   for (auto &factor : dfg) discreteCombined.push_back(factor);
 
@@ -37,25 +61,33 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
     discreteCombined.push_back(dcDiscreteFactor);
   }
 
-  updateDiscrete(discreteCombined, values);
-  DiscreteValues currDiscrete = solveDiscrete();
+  // Set discrete information in DCDiscreteFactors.
+  updateDiscrete(discreteCombined, currContinuous_, currDiscrete_);
+
+  // Update current discrete state estimate.
+  currDiscrete_ = solveDiscrete();
 
   for (auto &dcfactor : dcfg) {
     // NOTE: I think maybe this should be a boost::shared_ptr to avoid copy
     // construction
     DCContinuousFactor dcContinuousFactor(dcfactor);
-    dcContinuousFactor.updateDiscrete(currDiscrete);
+    dcContinuousFactor.updateDiscrete(currDiscrete_);
     combined.push_back(dcContinuousFactor);
   }
-  updateContinuousInfo(currDiscrete, combined, values);
-  gtsam::Values currContinuous = isam_.calculateEstimate();
-  updateDiscrete(discreteCombined, currContinuous);
+
+  // Only the initialGuess needs to be provided for the continuous solver (not
+  // the entire continuous state).
+  updateContinuousInfo(currDiscrete_, combined, initialGuessContinuous);
+  currContinuous_ = isam_.calculateEstimate();
+  // Update discrete info from last solve and
+  updateDiscrete(discreteCombined, currContinuous_, currDiscrete_);
 }
 
 void DCSAM::update(const HybridFactorGraph &hfg,
-                   const gtsam::Values &initialGuess) {
+                   const gtsam::Values &initialGuessContinuous,
+                   const DiscreteValues &initialGuessDiscrete) {
   update(hfg.nonlinearGraph(), hfg.discreteGraph(), hfg.dcGraph(),
-         initialGuess);
+         initialGuessContinuous, initialGuessDiscrete);
 }
 
 void DCSAM::update() {
@@ -65,14 +97,16 @@ void DCSAM::update() {
 
 void DCSAM::updateDiscrete(
     const gtsam::DiscreteFactorGraph &dfg = gtsam::DiscreteFactorGraph(),
-    const gtsam::Values &continuousVals = gtsam::Values()) {
+    const gtsam::Values &continuousVals = gtsam::Values(),
+    const DiscreteValues &discreteVals = DiscreteValues()) {
   for (auto &factor : dfg) {
     dfg_.push_back(factor);
   }
-  updateDiscreteInfo(continuousVals);
+  updateDiscreteInfo(continuousVals, discreteVals);
 }
 
-void DCSAM::updateDiscreteInfo(const gtsam::Values &continuousVals) {
+void DCSAM::updateDiscreteInfo(const gtsam::Values &continuousVals,
+                               const DiscreteValues &discreteVals) {
   if (continuousVals.empty()) return;
   // TODO(any): inefficient, consider storing indices of DCFactors
   // Update the DC factors with new continuous information.
@@ -81,11 +115,15 @@ void DCSAM::updateDiscreteInfo(const gtsam::Values &continuousVals) {
         boost::dynamic_pointer_cast<DCDiscreteFactor>(dfg_[j]);
     if (dcDiscrete) {
       dcDiscrete->updateContinuous(continuousVals);
+      dcDiscrete->updateDiscrete(discreteVals);
     }
   }
 }
 
-void DCSAM::updateContinuous() { isam_.update(); }
+void DCSAM::updateContinuous() {
+  isam_.update();
+  currContinuous_ = isam_.calculateEstimate();
+}
 
 // NOTE: for iSAM(2) requires special procedure (cf Jose Luis Blanco Github
 // post)
@@ -130,6 +168,8 @@ DiscreteValues DCSAM::solveDiscrete() {
 }
 
 DCValues DCSAM::calculateEstimate() {
+  // NOTE: if we have these cached from solves, we could presumably just return
+  // the cached values.
   gtsam::Values continuousVals = isam_.calculateEstimate();
   DiscreteValues discreteVals = (*dfg_.optimize());
   DCValues dcValues(continuousVals, discreteVals);
