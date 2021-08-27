@@ -1,18 +1,12 @@
 # dcsam
 
-Factored inference for discrete-continuous smoothing and mapping problems.
+This library, built using GTSAM, provides factor type definitions and a new solver to perform approximate inference on discrete-continuous (hybrid) factor graph models typically encountered in robotics applications.
+
+**NOTE: This library is currently under active development by the Marine Robotics Group at MIT. As such, the API is subject to potential breaking changes at any point.**
 
 ### References
 
-This method is fully described in the following report:
-```
-@article{doherty2021dcsam,
-title={DCSAM},
-author={Doherty, Kevin J. and Lu, Ziqi and Leonard, John J.},
-journal={Technical report},
-year={2021}
-}
-```
+We will soon be making available a technical report describing this library and our solver and providing documentation. For now, if you found this code useful, let us know!
 
 ## Prerequisites
 
@@ -38,6 +32,10 @@ To run unit tests:
 ```bash
 ~/build$ make test
 ```
+
+### Examples
+
+For example usage, for now the best resource is to take a look through `testDCSAM.cpp`.
 
 ## Developing
 
