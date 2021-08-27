@@ -1,0 +1,5 @@
+<map id="dcsam::SemanticBearingRangeFactor&lt; POSE, POINT, ROTATION &gt;" name="dcsam::SemanticBearingRangeFactor&lt; POSE, POINT, ROTATION &gt;">
+<area shape="rect" id="node1" title="Factor that represents bearing and range measurements that incorporate a semantic class measurement." alt="" coords="5,155,255,196"/>
+<area shape="rect" id="node2" href="$classdcsam_1_1_d_c_factor.html" title="Abstract class implementing a discrete&#45;continuous factor." alt="" coords="64,80,196,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="75,5,185,32"/>
+</map>

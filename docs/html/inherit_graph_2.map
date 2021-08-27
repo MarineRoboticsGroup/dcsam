@@ -1,0 +1,8 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" title=" " alt="" coords="5,78,68,105"/>
+<area shape="rect" id="node2" href="$classdcsam_1_1_d_c_factor.html" title="Abstract class implementing a discrete&#45;continuous factor." alt="" coords="116,78,248,105"/>
+<area shape="rect" id="node3" href="$classdcsam_1_1_d_c_max_mixture_factor.html" title="Implementation of a semantic max&#45;mixture factor." alt="" coords="315,5,526,47"/>
+<area shape="rect" id="node4" href="$classdcsam_1_1_d_c_mixture_factor.html" title="Implementation of a discrete conditional mixture factor. Implements a joint discrete&#45;continuous facto..." alt="" coords="328,71,513,112"/>
+<area shape="rect" id="node5" href="$classdcsam_1_1_semantic_bearing_range_factor.html" title="Factor that represents bearing and range measurements that incorporate a semantic class measurement." alt="" coords="296,136,545,177"/>
+<area shape="rect" id="node6" href="$classdcsam_1_1_smart_semantic_bearing_range_factor.html" title="Implementation of a &quot;smart&quot; updateable semantic bearing&#45;range factor." alt="" coords="593,136,816,177"/>
+</map>

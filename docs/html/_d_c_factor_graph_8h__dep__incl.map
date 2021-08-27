@@ -1,0 +1,8 @@
+<map id="include/dcsam/DCFactorGraph.h" name="include/dcsam/DCFactorGraph.h">
+<area shape="rect" id="node1" title="Simple class for factor graphs of DCFactor type." alt="" coords="101,5,332,32"/>
+<area shape="rect" id="node2" href="$_d_c_s_a_m_8h.html" title="Discrete&#45;Continuous Smoothing and Mapping for Factored Models." alt="" coords="57,169,238,196"/>
+<area shape="rect" id="node5" href="$_hybrid_factor_graph_8h.html" title="Custom hybrid factor graph for discrete + continuous factors." alt="" coords="185,80,387,121"/>
+<area shape="rect" id="node3" href="$_d_c_s_a_m_8cpp.html" title="Discrete&#45;Continuous Smoothing and Mapping for Factored Models." alt="" coords="5,244,127,271"/>
+<area shape="rect" id="node4" href="$test_d_c_s_a_m_8cpp.html" title="Unit tests for DCSAM." alt="" coords="151,244,309,271"/>
+<area shape="rect" id="node6" href="$_hybrid_factor_graph_8cpp.html" title="Custom hybrid factor graph for discrete + continuous factors." alt="" coords="262,169,457,196"/>
+</map>

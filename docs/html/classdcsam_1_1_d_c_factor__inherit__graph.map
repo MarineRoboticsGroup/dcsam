@@ -1,0 +1,8 @@
+<map id="dcsam::DCFactor" name="dcsam::DCFactor">
+<area shape="rect" id="node1" title="Abstract class implementing a discrete&#45;continuous factor." alt="" coords="164,78,296,105"/>
+<area shape="rect" id="node3" href="$classdcsam_1_1_d_c_max_mixture_factor.html" title="Implementation of a semantic max&#45;mixture factor." alt="" coords="363,5,574,47"/>
+<area shape="rect" id="node4" href="$classdcsam_1_1_d_c_mixture_factor.html" title="Implementation of a discrete conditional mixture factor. Implements a joint discrete&#45;continuous facto..." alt="" coords="376,71,561,112"/>
+<area shape="rect" id="node5" href="$classdcsam_1_1_semantic_bearing_range_factor.html" title="Factor that represents bearing and range measurements that incorporate a semantic class measurement." alt="" coords="344,136,593,177"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,78,116,105"/>
+<area shape="rect" id="node6" href="$classdcsam_1_1_smart_semantic_bearing_range_factor.html" title="Implementation of a &quot;smart&quot; updateable semantic bearing&#45;range factor." alt="" coords="641,136,864,177"/>
+</map>
