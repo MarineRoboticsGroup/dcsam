@@ -12,6 +12,10 @@ We will soon be making available a technical report describing this library and 
 
 - [GTSAM 4.1](https://github.com/borglab/gtsam)
 
+### Optional
+
+- [gtest](https://github.com/google/googletest) for building tests.
+
 ## Building
 
 ### Building the project
@@ -27,7 +31,15 @@ To build using `cmake`:
 
 ### Run tests
 
-To run unit tests:
+To run unit tests, first build with testing enabled:
+```bash
+~/$ mkdir build
+~/$ cd build
+~/build$ cmake .. -DENABLE_TESTS
+~/build$ make -j
+```
+
+Now you can run the tests as follows:
 
 ```bash
 ~/build$ make test
@@ -55,5 +67,3 @@ For modules in the `thirdparty` directory, we will not do any linting. If you ar
 ```
 git commit --no-verify -m "My commit message here...."
 ```
-
-
