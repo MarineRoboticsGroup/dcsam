@@ -169,7 +169,7 @@ class DCSAM {
    * @return an assignment (DiscreteValues) to the discrete variables in the
    * graph.
    */
-  DiscreteValues solveDiscrete();
+  DiscreteValues solveDiscrete() const;
 
   /**
    * This is the primary function used to extract an estimate from the solver.
@@ -181,7 +181,7 @@ class DCSAM {
    * of the most probable assignment to the continuous (DCValues.continuous) and
    * discrete (DCValues.discrete) variables.
    */
-  DCValues calculateEstimate();
+  DCValues calculateEstimate() const;
 
   /**
    * Used to obtain the marginals from the solver.

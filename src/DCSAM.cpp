@@ -167,12 +167,12 @@ void DCSAM::updateContinuousInfo(const DiscreteValues &discreteVals,
   isam_.update(newFactors, initialGuess, updateParams);
 }
 
-DiscreteValues DCSAM::solveDiscrete() {
+DiscreteValues DCSAM::solveDiscrete() const {
   DiscreteValues discreteVals = (*dfg_.optimize());
   return discreteVals;
 }
 
-DCValues DCSAM::calculateEstimate() {
+DCValues DCSAM::calculateEstimate() const {
   // NOTE: if we have these cached from solves, we could presumably just return
   // the cached values.
   gtsam::Values continuousVals = isam_.calculateEstimate();
