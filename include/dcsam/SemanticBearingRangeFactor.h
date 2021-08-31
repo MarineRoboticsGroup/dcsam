@@ -8,21 +8,22 @@
 
 #pragma once
 
-#include <gtsam/nonlinear/NonlinearFactor.h>
-#include <gtsam/sam/BearingRangeFactor.h>
-#include <gtsam/nonlinear/Symbol.h>
-#include <gtsam/geometry/Pose2.h>
-#include <gtsam/geometry/Pose3.h>
+#include <gtsam/geometry/BearingRange.h>
 #include <gtsam/geometry/Point2.h>
 #include <gtsam/geometry/Point3.h>
+#include <gtsam/geometry/Pose2.h>
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/nonlinear/NonlinearFactor.h>
+#include <gtsam/nonlinear/Symbol.h>
+#include <gtsam/sam/BearingRangeFactor.h>
 #include <math.h>
 
-#include "DCFactor.h"
-
 #include <algorithm>
-#include <vector>
 #include <limits>
 #include <type_traits>
+#include <vector>
+
+#include "DCFactor.h"
 
 namespace dcsam {
 
@@ -30,14 +31,16 @@ namespace dcsam {
  * @brief Factor that represents bearing and range measurements
  * that incorporate a semantic class measurement.
  */
-template<class POSE, class POINT, class ROTATION = typename POSE::Rotation>
+template <typename PoseType, typename PointType,
+          typename BearingType =
+              typename gtsam::Bearing<PoseType, PointType>::result_type,
+          typename RangeType =
+              typename gtsam::Range<PoseType, PointType>::result_type>
 class SemanticBearingRangeFactor : public DCFactor {
  private:
-  typedef POSE Pose;
-  typedef ROTATION Rot;
-  typedef POINT Point;
+  typedef SemanticBearingRangeFactor<PoseType, PointType> This;
 
-  gtsam::BearingRangeFactor<POSE, POINT> factor_;
+  gtsam::BearingRangeFactor<PoseType, PointType> factor_;
   std::vector<double> probs_;
 
  public:
@@ -45,25 +48,21 @@ class SemanticBearingRangeFactor : public DCFactor {
 
   SemanticBearingRangeFactor() = default;
 
-  explicit   SemanticBearingRangeFactor(const gtsam::Key &poseKey,
-                                        const gtsam::Key &pointKey,
-                                        const gtsam::DiscreteKey &discreteKey,
-                                        const std::vector<double> measuredProbs,
-                                        const Rot &measuredBearing,
-                                        const double measuredRange,
-                                        const gtsam::SharedNoiseModel &model)
-      : probs_(measuredProbs), factor_(poseKey,
-                                                          pointKey,
-                                                          measuredBearing,
-                                                          measuredRange,
-                                                          model) {
-          gtsam::KeyVector keys{poseKey, pointKey};
-          gtsam::DiscreteKeys dks(discreteKey);
-          keys_ = keys;
-          discreteKeys_ = dks;
-          gtsam::BearingRangeFactor<POSE, POINT> brfactor;
-         // factor_ = brfactor;
-        }
+  SemanticBearingRangeFactor(const gtsam::Key& poseKey,
+                             const gtsam::Key& pointKey,
+                             const gtsam::DiscreteKey& discreteKey,
+                             const std::vector<double> measuredProbs,
+                             const BearingType& measuredBearing,
+                             const RangeType& measuredRange,
+                             const gtsam::SharedNoiseModel& model)
+      : probs_(measuredProbs),
+        factor_(poseKey, pointKey, measuredBearing, measuredRange, model) {
+    gtsam::KeyVector keys{poseKey, pointKey};
+    gtsam::DiscreteKeys dks(discreteKey);
+    keys_ = keys;
+    discreteKeys_ = dks;
+    gtsam::BearingRangeFactor<PoseType, PointType> brfactor;
+  }
 
   virtual ~SemanticBearingRangeFactor() = default;
 
@@ -87,12 +86,10 @@ class SemanticBearingRangeFactor : public DCFactor {
   }
 
   // dim is the dimension of the underlying bearingrange factor
-  size_t dim() const override {
-    return factor_.dim();
-  }
+  size_t dim() const override { return factor_.dim(); }
 
   boost::shared_ptr<gtsam::GaussianFactor> linearize(
-            const gtsam::Values& continuousVals,
+      const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
     return factor_.linearize(continuousVals);
   }
@@ -105,7 +102,7 @@ class SemanticBearingRangeFactor : public DCFactor {
     // If the cast is successful, we'll properly construct a
     // SemanticBearingRangeFactor object from `other`
     const SemanticBearingRangeFactor& f(
-      static_cast<const SemanticBearingRangeFactor&>(other));
+        static_cast<const SemanticBearingRangeFactor&>(other));
 
     // compare the bearingrange factors
     if (!(factor_.equals(f.factor_, tol))) return false;
@@ -113,12 +110,10 @@ class SemanticBearingRangeFactor : public DCFactor {
     // If everything above passes, and the keys_, discreteKeys_ and probs_
     // variables are identical, return true.
     return (std::equal(keys_.begin(), keys_.end(), f.keys().begin()) &&
-            (discreteKeys_ == f.discreteKeys_) &&
-            (probs_ == f.probs_));
+            (discreteKeys_ == f.discreteKeys_) && (probs_ == f.probs_));
   }
 
-  double logNormalizingConstant(const gtsam::Values& values)
-                                                  const override {
+  double logNormalizingConstant(const gtsam::Values& values) const override {
     return nonlinearFactorLogNormalizingConstant(this->factor_, values);
   }
 };
