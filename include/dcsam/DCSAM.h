@@ -35,6 +35,8 @@ class DCSAM {
  public:
   DCSAM();
 
+  explicit DCSAM(const gtsam::ISAM2Params &isam_params);
+
   /**
    * For this solver, runs an iteration of alternating minimization between
    * discrete and continuous variables, adding any user-supplied factors (with

@@ -21,6 +21,11 @@ DCSAM::DCSAM() {
   isam_ = gtsam::ISAM2(isam_params_);
 }
 
+DCSAM::DCSAM(const gtsam::ISAM2Params &isam_params)
+    : isam_params_(isam_params) {
+  isam_ = gtsam::ISAM2(isam_params_);
+}
+
 void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
                    const gtsam::DiscreteFactorGraph &dfg,
                    const DCFactorGraph &dcfg,
