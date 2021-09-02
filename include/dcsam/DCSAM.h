@@ -70,14 +70,20 @@ class DCSAM {
    * factors to add.
    * @param dcfg - a DCFactorGraph containing any joint discrete-continuous
    * factors to add.
-   * @param initialGuess - an initial guess for any new continuous keys that.
-   * appear in the updated factors (or if one wants to force override previously
-   * obtained continuous values).
+   * @param removeFactorIndices - indices of factors to remove from system
+   * @param initialGuessContinuous - an initial guess for any new continuous 
+   * keys that appear in the updated factors (or if one wants to force override
+   * previously obtained continuous values).
+   * @param initialGuessDiscrete - an initial guess for any new discrete keys
+   * that appear in the updated factors (or if one wants to force override
+   * previously obtained discrete values).
    */
   void update(const gtsam::NonlinearFactorGraph &graph,
               const gtsam::DiscreteFactorGraph &dfg, const DCFactorGraph &dcfg,
               const gtsam::Values &initialGuessContinuous = gtsam::Values(),
-              const DiscreteValues &initialGuessDiscrete = DiscreteValues());
+              const DiscreteValues &initialGuessDiscrete = DiscreteValues(),
+              const gtsam::FactorIndices &removeFactorIndices =
+                                                     gtsam::FactorIndices());
 
   /**
    * A HybridFactorGraph is a container holding a NonlinearFactorGraph, a
@@ -90,7 +96,9 @@ class DCSAM {
    */
   void update(const HybridFactorGraph &hfg,
               const gtsam::Values &initialGuessContinuous = gtsam::Values(),
-              const DiscreteValues &initialGuessDiscrete = DiscreteValues());
+              const DiscreteValues &initialGuessDiscrete = DiscreteValues(),
+              const gtsam::FactorIndices &removeFactorIndices =
+                                                     gtsam::FactorIndices());
 
   /**
    * Inline convenience function to allow "skipping" the initial guess for
