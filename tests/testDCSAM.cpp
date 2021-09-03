@@ -1345,94 +1345,207 @@ TEST(TestSuite, dcMaxMixture_semantic_slam) {
 }
 
 /**
- * This is for testing the behavior of factor removal using isam.update()
- * for continuous factors and DiscreteFactorGraph.remove() or .erase()
- * for discrete factors.
+ * This is for testing the behavior of factor removal
  */
 TEST(TestSuite, factor_removal) {
-  // Make an empty dc factor graph
-  DCFactorGraph dcfg;
+   // Make a factor graph
+  HybridFactorGraph hfg;
 
-  // We'll make a variable with 2 possible assignments
-  const size_t cardinality = 2;
-  gtsam::DiscreteKey dk(gtsam::Symbol('d', 1), cardinality);
-
-  // Make a symbol for a single continuous variable and add to KeyVector
-  gtsam::Symbol x1 = gtsam::Symbol('x', 1);
-  gtsam::KeyVector keys;
-  keys.push_back(x1);
-
-  // Make a factor for non-null hypothesis
-  const double loc = 0.0;
-  const double sigma1 = 1.0;
-  gtsam::noiseModel::Isotropic::shared_ptr prior_noise1 =
-      gtsam::noiseModel::Isotropic::Sigma(1, sigma1);
-  gtsam::PriorFactor<double> f1(x1, loc, prior_noise1);
-
-  // Make a factor for null hypothesis
-  const double sigmaNullHypo = 8.0;
-  gtsam::noiseModel::Isotropic::shared_ptr prior_noiseNullHypo =
-      gtsam::noiseModel::Isotropic::Sigma(1, sigmaNullHypo);
-
-  gtsam::PriorFactor<double> fNullHypo(x1, loc, prior_noiseNullHypo);
-  std::vector<gtsam::PriorFactor<double>> factorComponents{f1, fNullHypo};
-
-  DCMixtureFactor<gtsam::PriorFactor<double>> dcMixture(keys, dk,
-                                                        factorComponents);
-  dcfg.push_back(dcMixture);
-
-  gtsam::DiscreteKey dkTest = dcMixture.discreteKeys()[0];
-  std::cout << "DK 1st: " << dkTest.first << std::endl;
-  std::cout << "DK 2nd: " << dkTest.second << std::endl;
-
-  // Let's make an initial guess for the continuous values
+  // Values for initial guess
   gtsam::Values initialGuess;
-  double initVal = -2.5;
-  initialGuess.insert(x1, initVal);
-
-  // We also need an initial guess for the discrete variables (this will only be
-  // used if it is needed by your factors), here it is ignored.
   DiscreteValues initialGuessDiscrete;
-  initialGuessDiscrete[dk.first] = 0;
 
-  // Let's make a discrete factor graph
-  gtsam::DiscreteFactorGraph dfg;
+  gtsam::Symbol x0('x', 0);
+  gtsam::Symbol l1('l', 1);
+  gtsam::Symbol lc1('c', 1);
+  // Create a discrete key for landmark 1 class with cardinality 2.
+  gtsam::DiscreteKey lm1_class(lc1, 2);
+  gtsam::Pose2 pose0(0, 0, 0);
+  gtsam::Pose2 dx(1, 0, 0.78539816);
+  double prior_sigma = 0.1;
+  double meas_sigma = 1.0;
+  double circumradius = (std::sqrt(4 + 2 * std::sqrt(2))) / 2.0;
+  gtsam::Point2 landmark1(circumradius, circumradius);
 
-  // Pack DCMixture into a DCDiscreteFactor
-  for (auto& it : dcfg) {
-    DCDiscreteFactor dcDiscrete(it->discreteKeys()[0], it);
-    dfg.push_back(dcDiscrete);
-  }
+  gtsam::noiseModel::Isotropic::shared_ptr prior_noise =
+      gtsam::noiseModel::Isotropic::Sigma(3, prior_sigma);
+  gtsam::noiseModel::Isotropic::shared_ptr prior_lm_noise =
+      gtsam::noiseModel::Isotropic::Sigma(2, prior_sigma);
+  gtsam::noiseModel::Isotropic::shared_ptr meas_noise =
+      gtsam::noiseModel::Isotropic::Sigma(3, meas_sigma);
 
-  // Update continuous info
-  for (size_t j = 0; j < dfg.size(); j++) {
-    boost::shared_ptr<DCDiscreteFactor> dcDiscreteFactor =
-        boost::dynamic_pointer_cast<DCDiscreteFactor>(dfg[j]);
-    if (dcDiscreteFactor) {
-      dcDiscreteFactor->updateContinuous(initialGuess);
-      dcDiscreteFactor->updateDiscrete(initialGuessDiscrete);
+  // 0.1 rad std on bearing, 10cm on range
+  gtsam::noiseModel::Isotropic::shared_ptr br_noise =
+      gtsam::noiseModel::Isotropic::Sigma(2, 0.1);
+
+  std::vector<double> prior_lm1_class;
+  prior_lm1_class.push_back(0.9);
+  prior_lm1_class.push_back(0.1);
+
+  gtsam::PriorFactor<gtsam::Pose2> p0(x0, pose0, prior_noise);
+  gtsam::PriorFactor<gtsam::Point2> pl1(l1, landmark1, prior_lm_noise);
+  DiscretePriorFactor plc1(lm1_class, prior_lm1_class);
+
+  initialGuess.insert(x0, pose0);
+  initialGuess.insert(l1, landmark1);
+  initialGuessDiscrete[lm1_class.first] = 0;
+
+  hfg.push_nonlinear(p0);
+  hfg.push_nonlinear(pl1);
+  hfg.push_discrete(plc1);
+
+  // set up for landmark 2
+  gtsam::Symbol l2('l', 2);
+  gtsam::Symbol lc2('c', 2);
+  // Create a discrete key for landmark 2 class with cardinality 2.
+  gtsam::DiscreteKey lm2_class(lc2, 2);
+  gtsam::Point2 landmark2(circumradius + .5, circumradius + 5);
+
+  std::vector<double> prior_lm2_class;
+  prior_lm2_class.push_back(0.1);
+  prior_lm2_class.push_back(0.9);
+
+  gtsam::PriorFactor<gtsam::Point2> pl2(l2, landmark2, prior_lm_noise);
+  DiscretePriorFactor plc2(lm2_class, prior_lm2_class);
+
+  initialGuess.insert(l2, landmark2);
+  initialGuessDiscrete[lm2_class.first] = 1;
+
+  hfg.push_nonlinear(pl2);
+  hfg.push_discrete(plc2);
+
+  // Setup dcsam
+  DCSAM dcsam;
+  dcsam.update(hfg, initialGuess, initialGuessDiscrete);
+
+  DCValues dcval_start = dcsam.calculateEstimate();
+  std::cout << "Printing first values" << std::endl;
+  dcval_start.discrete.print();
+
+  hfg.clear();
+  initialGuess.clear();
+  initialGuessDiscrete.clear();
+
+  gtsam::Pose2 odom(pose0);
+  gtsam::Pose2 noise(0.01, 0.01, 0.01);
+  for (size_t i = 0; i < 7; i++) {
+    gtsam::Symbol xi('x', i);
+    gtsam::Symbol xj('x', i + 1);
+
+    gtsam::Pose2 meas = dx * noise;
+
+    gtsam::BetweenFactor<gtsam::Pose2> bw(xi, xj, meas, meas_noise);
+    hfg.push_nonlinear(bw);
+
+    // Add semantic bearing-range measurement to landmark in center
+    gtsam::Rot2 bearing1 = gtsam::Rot2::fromDegrees(67.5);
+    double range1 = circumradius;
+
+    // For the first couple measurements, pick class=0, later pick class=1
+    std::vector<double> semantic_meas;
+    if (i < 2) {
+      semantic_meas.push_back(0.9);
+      semantic_meas.push_back(0.1);
+    } else {
+      semantic_meas.push_back(0.1);
+      semantic_meas.push_back(0.9);
     }
+
+    gtsam::DiscreteKeys dks({lm1_class, lm2_class});
+
+    // build mixture: dcmaxmixture should be picking the component for lm1
+    SemanticBearingRangeFactor<gtsam::Pose2, gtsam::Point2> sbr1(
+                xi, l1, lm1_class, semantic_meas, bearing1, range1, br_noise);
+    SemanticBearingRangeFactor<gtsam::Pose2, gtsam::Point2> sbr2(
+                xi, l2, lm2_class, semantic_meas, bearing1, range1, br_noise);
+    DCMaxMixtureFactor<SemanticBearingRangeFactor<gtsam::Pose2,
+                                                  gtsam::Point2>> dcmmf(
+                            {xi, l1, l2}, dks, {sbr1, sbr2}, {.5, .5}, false);
+
+    hfg.push_dc(dcmmf);
+    odom = odom * meas;
+    initialGuess.insert(xj, odom);
+    dcsam.update(hfg, initialGuess);
+    DCValues dcvals = dcsam.calculateEstimate();
+
+    size_t mpeClassL1 = dcvals.discrete.at(lc1);
+
+    // Plot poses and landmarks
+#ifdef ENABLE_PLOTTING
+    std::vector<double> xs, ys;
+    for (size_t j = 0; j < i + 2; j++) {
+      xs.push_back(
+          dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', j)).x());
+      ys.push_back(
+          dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', j)).y());
+    }
+
+    std::vector<double> lmxs, lmys;
+    lmxs.push_back(
+        dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).x());
+    lmys.push_back(
+        dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).y());
+
+    string color = (mpeClassL1 == 0) ? "b" : "orange";
+
+    plt::plot(xs, ys);
+    plt::scatter(lmxs, lmys, {{"color", color}});
+    plt::show();
+#endif
+
+    hfg.clear();
+    initialGuess.clear();
   }
 
-  // Solve for discrete given continuous
-  gtsam::DiscreteFactor::sharedValues mostProbableEstimate = dfg.optimize();
+  gtsam::Symbol x7('x', 7);
+  gtsam::BetweenFactor<gtsam::Pose2> bw(x0, x7, dx * noise, meas_noise);
 
-  // Get the most probable estimate
-  size_t mpeD = (*mostProbableEstimate).at(dk.first);
+  hfg.push_nonlinear(bw);
+  dcsam.update(hfg, initialGuess);
 
-  // Get the marginals
-  gtsam::DiscreteMarginals newDiscreteMarginals(dfg);
-  gtsam::Vector newMargProbs = newDiscreteMarginals.marginalProbabilities(dk);
+  DCValues dcvals = dcsam.calculateEstimate();
 
-  // Ensure that the prediction is correct
-  EXPECT_EQ(mpeD, 1);
+  size_t mpeClassL1 = dcvals.discrete.at(lc1);
 
-  // now let's try deleting things and see what happens! 
-  dfg.remove(0);
-  EXPECT_EQ(dfg.size(), 0);
+  // Plot the poses and landmarks
+#ifdef ENABLE_PLOTTING
+  std::vector<double> xs, ys;
+  for (size_t i = 0; i < 8; i++) {
+    xs.push_back(dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', i)).x());
+    ys.push_back(dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', i)).y());
+  }
 
+  std::vector<double> lmxs, lmys;
+  lmxs.push_back(
+      dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).x());
+  lmys.push_back(
+      dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).y());
+
+  string color = (mpeClassL1 == 0) ? "b" : "orange";
+
+  plt::plot(xs, ys);
+  plt::scatter(lmxs, lmys, {{"color", color}});
+  plt::show();
+#endif
+
+  EXPECT_EQ(mpeClassL1, 1);
   
 
+  // So far, this same as earlier example. Now let's start removing factors  
+  // and see what happens. 
+  EXPECT_EQ(dcsam.getDiscreteFactorGraph().size(), 18);
+  EXPECT_EQ(dcsam.getNonlinearFactorGraph().size(), 18);
+
+  hfg.clear();
+  initialGuess.clear();
+  initialGuessDiscrete.clear();
+  std::vector<size_t> discreteRemovals{17};
+  gtsam::FactorIndices removals{17};
+
+  dcsam.update(hfg, initialGuess, initialGuessDiscrete, removals, discreteRemovals);
+  
+  EXPECT_EQ(dcsam.getDiscreteFactorGraph().at(17), nullptr);
+  EXPECT_EQ(dcsam.getNonlinearFactorGraph().at(17), nullptr);
 }
 
 

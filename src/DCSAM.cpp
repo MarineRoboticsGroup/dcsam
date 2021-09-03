@@ -31,14 +31,17 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
                    const DCFactorGraph &dcfg,
                    const gtsam::Values &initialGuessContinuous,
                    const DiscreteValues &initialGuessDiscrete,
-                   const gtsam::FactorIndices &removeFactorIndices) {
+                   const gtsam::FactorIndices &removeFactorIndices,
+                   const std::vector<size_t> &removeDiscreteFactorIndices) {
 
   // First things first: get rid of factors that are to be removed so updates
   // to follow take the removals into account 
-  isam_.update(removeFactorIndices);
-  //dfg_.remov
+  isam_.update(gtsam::NonlinearFactorGraph(), gtsam::Values(), removeFactorIndices);
+  for (auto& i : removeDiscreteFactorIndices) {
+    dfg_.remove(i);
+  }
 
-  // Second things second: combine currContinuous_ estimate with the new values
+  // Next: combine currContinuous_ estimate with the new values
   // from initialGuessContinuous to produce the full continuous variable state.
   for (const gtsam::Key k : initialGuessContinuous.keys()) {
     if (currContinuous_.exists(k))
@@ -98,9 +101,11 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
 void DCSAM::update(const HybridFactorGraph &hfg,
                    const gtsam::Values &initialGuessContinuous,
                    const DiscreteValues &initialGuessDiscrete,
-                   const gtsam::FactorIndices &removeFactorIndices) {
+                   const gtsam::FactorIndices &removeFactorIndices,
+                   const std::vector<size_t> &removeDiscreteFactorIndices) {
   update(hfg.nonlinearGraph(), hfg.discreteGraph(), hfg.dcGraph(), 
-         initialGuessContinuous, initialGuessDiscrete, removeFactorIndices);
+         initialGuessContinuous, initialGuessDiscrete, 
+         removeFactorIndices, removeDiscreteFactorIndices);
 }
 
 void DCSAM::update() {

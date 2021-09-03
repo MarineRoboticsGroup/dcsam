@@ -70,20 +70,24 @@ class DCSAM {
    * factors to add.
    * @param dcfg - a DCFactorGraph containing any joint discrete-continuous
    * factors to add.
-   * @param removeFactorIndices - indices of factors to remove from system
    * @param initialGuessContinuous - an initial guess for any new continuous 
    * keys that appear in the updated factors (or if one wants to force override
    * previously obtained continuous values).
    * @param initialGuessDiscrete - an initial guess for any new discrete keys
    * that appear in the updated factors (or if one wants to force override
    * previously obtained discrete values).
+   * @param removeFactorIndices - indices of continuous factors to remove
+   * @param removeDiscreteFactorIndices - indices of discrete factors to remove
+
    */
   void update(const gtsam::NonlinearFactorGraph &graph,
               const gtsam::DiscreteFactorGraph &dfg, const DCFactorGraph &dcfg,
               const gtsam::Values &initialGuessContinuous = gtsam::Values(),
               const DiscreteValues &initialGuessDiscrete = DiscreteValues(),
               const gtsam::FactorIndices &removeFactorIndices =
-                                                     gtsam::FactorIndices());
+                                                     gtsam::FactorIndices(),
+              const std::vector<size_t> &removeDiscreteFactorIndices = 
+                                                            std::vector<size_t>());
 
   /**
    * A HybridFactorGraph is a container holding a NonlinearFactorGraph, a
@@ -92,13 +96,15 @@ class DCSAM {
    * parameters: that is:
    *
    * update(hfg.nonlinearGraph(), hfg.discreteGraph(), hfg.dcGraph(),
-   * initialGuess);
+   * initialGuess, removeFactorIndices, removeDiscreteFactorIndices);
    */
   void update(const HybridFactorGraph &hfg,
               const gtsam::Values &initialGuessContinuous = gtsam::Values(),
               const DiscreteValues &initialGuessDiscrete = DiscreteValues(),
               const gtsam::FactorIndices &removeFactorIndices =
-                                                     gtsam::FactorIndices());
+                                                     gtsam::FactorIndices(),
+              const std::vector<size_t> &removeDiscreteFactorIndices = 
+                                                            std::vector<size_t>());
 
   /**
    * Inline convenience function to allow "skipping" the initial guess for
