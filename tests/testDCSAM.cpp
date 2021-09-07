@@ -1539,13 +1539,15 @@ TEST(TestSuite, factor_removal) {
   hfg.clear();
   initialGuess.clear();
   initialGuessDiscrete.clear();
-  std::vector<size_t> discreteRemovals{17};
+  gtsam::FactorIndices discreteRemovals{17};
   gtsam::FactorIndices removals{17};
 
   dcsam.update(hfg, initialGuess, initialGuessDiscrete, removals, discreteRemovals);
   
   EXPECT_EQ(dcsam.getDiscreteFactorGraph().at(17), nullptr);
   EXPECT_EQ(dcsam.getNonlinearFactorGraph().at(17), nullptr);
+  
+
 }
 
 

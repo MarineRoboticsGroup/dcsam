@@ -86,8 +86,8 @@ class DCSAM {
               const DiscreteValues &initialGuessDiscrete = DiscreteValues(),
               const gtsam::FactorIndices &removeFactorIndices =
                                                      gtsam::FactorIndices(),
-              const std::vector<size_t> &removeDiscreteFactorIndices = 
-                                                            std::vector<size_t>());
+              const gtsam::FactorIndices &removeDiscreteFactorIndices = 
+                                                            gtsam::FactorIndices());
 
   /**
    * A HybridFactorGraph is a container holding a NonlinearFactorGraph, a
@@ -103,8 +103,8 @@ class DCSAM {
               const DiscreteValues &initialGuessDiscrete = DiscreteValues(),
               const gtsam::FactorIndices &removeFactorIndices =
                                                      gtsam::FactorIndices(),
-              const std::vector<size_t> &removeDiscreteFactorIndices = 
-                                                            std::vector<size_t>());
+              const gtsam::FactorIndices &removeDiscreteFactorIndices = 
+                                                            gtsam::FactorIndices());
 
   /**
    * Inline convenience function to allow "skipping" the initial guess for

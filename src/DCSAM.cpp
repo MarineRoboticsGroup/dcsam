@@ -32,7 +32,7 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
                    const gtsam::Values &initialGuessContinuous,
                    const DiscreteValues &initialGuessDiscrete,
                    const gtsam::FactorIndices &removeFactorIndices,
-                   const std::vector<size_t> &removeDiscreteFactorIndices) {
+                   const gtsam::FactorIndices &removeDiscreteFactorIndices) {
 
   // First things first: get rid of factors that are to be removed so updates
   // to follow take the removals into account 
@@ -102,7 +102,7 @@ void DCSAM::update(const HybridFactorGraph &hfg,
                    const gtsam::Values &initialGuessContinuous,
                    const DiscreteValues &initialGuessDiscrete,
                    const gtsam::FactorIndices &removeFactorIndices,
-                   const std::vector<size_t> &removeDiscreteFactorIndices) {
+                   const gtsam::FactorIndices &removeDiscreteFactorIndices) {
   update(hfg.nonlinearGraph(), hfg.discreteGraph(), hfg.dcGraph(), 
          initialGuessContinuous, initialGuessDiscrete, 
          removeFactorIndices, removeDiscreteFactorIndices);
