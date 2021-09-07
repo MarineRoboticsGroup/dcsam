@@ -35,7 +35,7 @@ To run unit tests, first build with testing enabled:
 ```bash
 ~/$ mkdir build
 ~/$ cd build
-~/build$ cmake .. -DENABLE_TESTS
+~/build$ cmake .. -DENABLE_TESTS=ON
 ~/build$ make -j
 ```
 
