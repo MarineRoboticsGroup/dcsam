@@ -92,7 +92,8 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
 
   // Only the initialGuess needs to be provided for the continuous solver (not
   // the entire continuous state).
-  updateContinuousInfo(currDiscrete_, combined, initialGuessContinuous);
+  updateContinuousInfo(currDiscrete_, combined, initialGuessContinuous, 
+                                                    removeFactorIndices);
   currContinuous_ = isam_.calculateEstimate();
   // Update discrete info from last solve and
   updateDiscrete(discreteCombined, currContinuous_, currDiscrete_);
@@ -149,7 +150,8 @@ void DCSAM::updateContinuous() {
 // https://github.com/borglab/gtsam/pull/25/files#diff-277639578c861563a471b12776f86ad0b6317f61103adaae455e0cbe05899747R58
 void DCSAM::updateContinuousInfo(const DiscreteValues &discreteVals,
                                  const gtsam::NonlinearFactorGraph &newFactors,
-                                 const gtsam::Values &initialGuess) {
+                                 const gtsam::Values &initialGuess,
+                                 const gtsam::FactorIndices &removeFactorIndices) {
   // ISAM2UpdateParams updateParams;
   // gtsam::FastMap<gtsam::FactorIndex, gtsam::KeySet> newAffectedKeys;
   // for (size_t j = 0; j < dcContinuousFactors.size(); j++) {
@@ -176,6 +178,7 @@ void DCSAM::updateContinuousInfo(const DiscreteValues &discreteVals,
     }
   }
   updateParams.newAffectedKeys = std::move(newAffectedKeys);
+  updateParams.removeFactorIndices = removeFactorIndices; 
   // NOTE: I am not yet 100% sure this is the right way to handle this update.
   isam_.update(newFactors, initialGuess, updateParams);
 }

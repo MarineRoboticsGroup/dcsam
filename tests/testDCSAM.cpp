@@ -1388,31 +1388,11 @@ TEST(TestSuite, factor_removal) {
 
   initialGuess.insert(x0, pose0);
   initialGuess.insert(l1, landmark1);
-  initialGuessDiscrete[lm1_class.first] = 0;
+  initialGuessDiscrete[lm1_class.first] = 1;
 
   hfg.push_nonlinear(p0);
   hfg.push_nonlinear(pl1);
   hfg.push_discrete(plc1);
-
-  // set up for landmark 2
-  gtsam::Symbol l2('l', 2);
-  gtsam::Symbol lc2('c', 2);
-  // Create a discrete key for landmark 2 class with cardinality 2.
-  gtsam::DiscreteKey lm2_class(lc2, 2);
-  gtsam::Point2 landmark2(circumradius + .5, circumradius + 5);
-
-  std::vector<double> prior_lm2_class;
-  prior_lm2_class.push_back(0.1);
-  prior_lm2_class.push_back(0.9);
-
-  gtsam::PriorFactor<gtsam::Point2> pl2(l2, landmark2, prior_lm_noise);
-  DiscretePriorFactor plc2(lm2_class, prior_lm2_class);
-
-  initialGuess.insert(l2, landmark2);
-  initialGuessDiscrete[lm2_class.first] = 1;
-
-  hfg.push_nonlinear(pl2);
-  hfg.push_discrete(plc2);
 
   // Setup dcsam
   DCSAM dcsam;
@@ -1428,7 +1408,7 @@ TEST(TestSuite, factor_removal) {
 
   gtsam::Pose2 odom(pose0);
   gtsam::Pose2 noise(0.01, 0.01, 0.01);
-  for (size_t i = 0; i < 7; i++) {
+  for (size_t i = 0; i < 3; i++) {
     gtsam::Symbol xi('x', i);
     gtsam::Symbol xj('x', i + 1);
 
@@ -1441,9 +1421,9 @@ TEST(TestSuite, factor_removal) {
     gtsam::Rot2 bearing1 = gtsam::Rot2::fromDegrees(67.5);
     double range1 = circumradius;
 
-    // For the first couple measurements, pick class=0, later pick class=1
+    // For the first measurement, pick class=0, later pick class=1
     std::vector<double> semantic_meas;
-    if (i < 2) {
+    if (i < 1) {
       semantic_meas.push_back(0.9);
       semantic_meas.push_back(0.1);
     } else {
@@ -1451,106 +1431,56 @@ TEST(TestSuite, factor_removal) {
       semantic_meas.push_back(0.9);
     }
 
-    gtsam::DiscreteKeys dks({lm1_class, lm2_class});
+    gtsam::DiscreteKeys dks({lm1_class});
 
-    // build mixture: dcmaxmixture should be picking the component for lm1
     SemanticBearingRangeFactor<gtsam::Pose2, gtsam::Point2> sbr1(
                 xi, l1, lm1_class, semantic_meas, bearing1, range1, br_noise);
-    SemanticBearingRangeFactor<gtsam::Pose2, gtsam::Point2> sbr2(
-                xi, l2, lm2_class, semantic_meas, bearing1, range1, br_noise);
-    DCMaxMixtureFactor<SemanticBearingRangeFactor<gtsam::Pose2,
-                                                  gtsam::Point2>> dcmmf(
-                            {xi, l1, l2}, dks, {sbr1, sbr2}, {.5, .5}, false);
 
-    hfg.push_dc(dcmmf);
+    hfg.push_dc(sbr1);
     odom = odom * meas;
     initialGuess.insert(xj, odom);
     dcsam.update(hfg, initialGuess);
     DCValues dcvals = dcsam.calculateEstimate();
 
-    size_t mpeClassL1 = dcvals.discrete.at(lc1);
-
-    // Plot poses and landmarks
-#ifdef ENABLE_PLOTTING
-    std::vector<double> xs, ys;
-    for (size_t j = 0; j < i + 2; j++) {
-      xs.push_back(
-          dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', j)).x());
-      ys.push_back(
-          dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', j)).y());
-    }
-
-    std::vector<double> lmxs, lmys;
-    lmxs.push_back(
-        dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).x());
-    lmys.push_back(
-        dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).y());
-
-    string color = (mpeClassL1 == 0) ? "b" : "orange";
-
-    plt::plot(xs, ys);
-    plt::scatter(lmxs, lmys, {{"color", color}});
-    plt::show();
-#endif
-
     hfg.clear();
     initialGuess.clear();
   }
-
-  gtsam::Symbol x7('x', 7);
-  gtsam::BetweenFactor<gtsam::Pose2> bw(x0, x7, dx * noise, meas_noise);
-
-  hfg.push_nonlinear(bw);
-  dcsam.update(hfg, initialGuess);
-
-  DCValues dcvals = dcsam.calculateEstimate();
-
-  size_t mpeClassL1 = dcvals.discrete.at(lc1);
-
-  // Plot the poses and landmarks
-#ifdef ENABLE_PLOTTING
-  std::vector<double> xs, ys;
-  for (size_t i = 0; i < 8; i++) {
-    xs.push_back(dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', i)).x());
-    ys.push_back(dcvals.continuous.at<gtsam::Pose2>(gtsam::Symbol('x', i)).y());
-  }
-
-  std::vector<double> lmxs, lmys;
-  lmxs.push_back(
-      dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).x());
-  lmys.push_back(
-      dcvals.continuous.at<gtsam::Point2>(gtsam::Symbol('l', 1)).y());
-
-  string color = (mpeClassL1 == 0) ? "b" : "orange";
-
-  plt::plot(xs, ys);
-  plt::scatter(lmxs, lmys, {{"color", color}});
-  plt::show();
-#endif
-
-  EXPECT_EQ(mpeClassL1, 1);
   
+  DCValues dcvals = dcsam.calculateEstimate();
+  size_t mpeClassL1 = dcvals.discrete.at(lc1);
+  EXPECT_EQ(mpeClassL1, 1);
 
-  // So far, this same as earlier example. Now let's start removing factors  
-  // and see what happens. 
-  EXPECT_EQ(dcsam.getDiscreteFactorGraph().size(), 18);
-  EXPECT_EQ(dcsam.getNonlinearFactorGraph().size(), 18);
+  std::cout << "now let's remove factors! " << std::endl;
+
+  // Now let's start removing factors and see what happens. 
+  EXPECT_EQ(dcsam.getDiscreteFactorGraph().size(), 8);
+  EXPECT_EQ(dcsam.getNonlinearFactorGraph().size(), 8);
 
   hfg.clear();
   initialGuess.clear();
   initialGuessDiscrete.clear();
-  gtsam::FactorIndices discreteRemovals{17};
-  gtsam::FactorIndices removals{17};
+
+  // removing all discrete factors with high class 1 prob 
+  gtsam::FactorIndices discreteRemovals{3,5,7};
+
+  // make sure continuous removal works as well 
+  gtsam::FactorIndices removals{7};
+
+  // TODO(Kurran) why does removing continous factor 5 cause isam segfault?
+  // dcsam.getNonlinearFactorGraph().at(5)->print();
 
   dcsam.update(hfg, initialGuess, initialGuessDiscrete, removals, discreteRemovals);
-  
-  EXPECT_EQ(dcsam.getDiscreteFactorGraph().at(17), nullptr);
-  EXPECT_EQ(dcsam.getNonlinearFactorGraph().at(17), nullptr);
-  
+
+  EXPECT_EQ(dcsam.getDiscreteFactorGraph().at(7), nullptr);
+  EXPECT_EQ(dcsam.getNonlinearFactorGraph().at(7), nullptr);
+
+  dcvals = dcsam.calculateEstimate();
+
+  mpeClassL1 = dcvals.discrete.at(lc1);
+
+  EXPECT_EQ(mpeClassL1, 0);  
 
 }
-
-
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

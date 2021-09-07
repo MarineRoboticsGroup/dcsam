@@ -174,7 +174,8 @@ class DCSAM {
    */
   void updateContinuousInfo(const DiscreteValues &discreteVals,
                             const gtsam::NonlinearFactorGraph &newFactors,
-                            const gtsam::Values &initialGuess);
+                            const gtsam::Values &initialGuess,
+                            const gtsam::FactorIndices &removeFactorIndices = gtsam::FactorIndices());
 
   /**
    * Solve for discrete variables given continuous variables. Internally, calls
