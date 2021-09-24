@@ -117,14 +117,14 @@ class DCMaxMixtureFactor : public DCFactor {
   boost::shared_ptr<gtsam::GaussianFactor> linearize(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
-    double min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
+    size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
     return factors_[min_error_idx].linearize(continuousVals, discreteVals);
   }
 
   gtsam::DecisionTreeFactor toDecisionTreeFactor(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
-    double min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
+    size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
     return factors_[min_error_idx].toDecisionTreeFactor(continuousVals,
                                                          discreteVals);
   }
@@ -132,7 +132,7 @@ class DCMaxMixtureFactor : public DCFactor {
   gtsam::FastVector<gtsam::Key> getAssociationKeys(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const {
-    double min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
+    size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
     return factors_[min_error_idx].keys();
   }
 
