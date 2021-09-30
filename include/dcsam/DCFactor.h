@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <string>
 #include <vector>
 
 #include "DCSAM_types.h"
@@ -299,9 +300,16 @@ class DCFactor : public gtsam::Factor {
       checkNormalization += prob;
     }
 
-    // TODO(kevin): I'd like a better way to flag this; maybe we can throw an
-    // exception in the event that there is a problem here.
-    assert(checkNormalization == 1.0);
+    if (checkNormalization != !.0) {
+      std::string errMsg =
+          std::string(
+              "DCFactor::evalProbs failed to normalize probabilities. ") +
+          std::string("Expected value 1.0. Got value: ") +
+          std::to_string(checkNormalization) +
+          std::string(
+              "\n This could have resulted from numerical overflow/underflow.");
+      throw std::logic_error(errMsg);
+    }
 
     return probs;
   }
