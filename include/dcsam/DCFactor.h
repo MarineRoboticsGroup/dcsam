@@ -167,22 +167,25 @@ class DCFactor : public gtsam::Factor {
 
   /**
    * Calculate a normalizing constant for this DCFactor. Most implementations
-   * will be able to use the helper function nonlinearFactorLogNormalizingConstant
-   * provided below for most of the calculation.
+   * will be able to use the helper function
+   * nonlinearFactorLogNormalizingConstant provided below for most of the
+   * calculation.
    * TODO(Kurran) is this the cleanest way to do this? Seems necessary for the
    * DCMaxMixtureFactor implementations etc...
    */
   virtual double logNormalizingConstant(const gtsam::Values& values) const {
-    throw std::logic_error("Normalizing constant not implemented."
-      "One or more of the factors in use requires access to the normalization"
-      "constant for a child class of DCFactor, but`logNormalizingConstant` "
-      "has not been overridden.");
+    throw std::logic_error(
+        "Normalizing constant not implemented."
+        "One or more of the factors in use requires access to the normalization"
+        "constant for a child class of DCFactor, but`logNormalizingConstant` "
+        "has not been overridden.");
   }
 
   /**
-   * Default for computing the _negative_ normalizing constant for the measurement
-   * likelihood (since we are minimizing the _negative_ log-likelihood), to be used
-   * as a utility for computing the DCFactorLogNormalizingConstant.
+   * Default for computing the _negative_ normalizing constant for the
+   * measurement likelihood (since we are minimizing the _negative_
+   * log-likelihood), to be used as a utility for computing the
+   * DCFactorLogNormalizingConstant.
    */
   template <typename NonlinearFactorType>
   double nonlinearFactorLogNormalizingConstant(
@@ -248,23 +251,57 @@ class DCFactor : public gtsam::Factor {
    */
   std::vector<double> evalProbs(const gtsam::DiscreteKey& dk,
                                 const gtsam::Values& continuousVals) const {
-    double total = 0.0;
-    std::vector<double> probs;
+    /*
+     * Normalizing a set of log probabilities in a numerically stable way is
+     * tricky. To avoid overflow/underflow issues, we compute the largest
+     * (finite) log probability and subtract it from each log probability before
+     * normalizing. This comes from the observation that if:
+     *    p_i = exp(L_i) / ( sum_j exp(L_j) ),
+     * Then,
+     *    p_i = exp(Z) exp(L_i - Z) / (exp(Z) sum_j exp(L_j - Z)),
+     *        = exp(L_i - Z) / ( sum_j exp(L_j - Z) )
+     *
+     * Setting Z = max_j L_j, we can avoid numerical issues that arise when all
+     * of the (unnormalized) log probabilities are either very large or very
+     * small.
+     */
+    std::vector<double> logProbs;
+    double maxLogProb = -std::numeric_limits<double>::infinity();
     for (size_t i = 0; i < dk.second; i++) {
       DiscreteValues testDiscreteVals;
       testDiscreteVals[dk.first] = i;
-      // Compute _unnormalized_ probability of discrete value = i
       // Recall: `error` returns -log(prob), so we compute exp(-error) to
       // recover probability
-      double probPrime = exp(-error(continuousVals, testDiscreteVals));
-      probs.push_back(probPrime);
-      total += probPrime;
+      double logProb = -error(continuousVals, testDiscreteVals);
+      logProbs.push_back(logProb);
+      if ((logProb != std::numeric_limits<double>::infinity()) &&
+          logProb > maxLogProb) {
+        maxLogProb = logProb;
+      }
     }
 
-    // Normalize the result
+    // After computing the max = "Z" of the log probabilities L_i, we compute
+    // the log of the normalizing constant, log S, where S = sum_j exp(L_j - Z).
+    double total = 0.0;
     for (size_t i = 0; i < dk.second; i++) {
-      probs[i] = probs[i] / total;
+      double probPrime = exp(logProbs[i] - maxLogProb);
+      total += probPrime;
     }
+    double logTotal = log(total);
+
+    // Now we compute the (normalized) probability (for each i):
+    // p_i = exp(L_i - Z - log S)
+    double checkNormalization = 0.0;
+    std::vector<double> probs;
+    for (size_t i = 0; i < dk.second; i++) {
+      double prob = exp(logProbs[i] - maxLogProb - logTotal);
+      probs.push_back(prob);
+      checkNormalization += prob;
+    }
+
+    // TODO(kevin): I'd like a better way to flag this; maybe we can throw an
+    // exception in the event that there is a problem here.
+    assert(checkNormalization == 1.0);
 
     return probs;
   }
