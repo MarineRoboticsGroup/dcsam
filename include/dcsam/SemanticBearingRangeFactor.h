@@ -74,14 +74,14 @@ class SemanticBearingRangeFactor : public DCFactor {
     this->discreteKeys_ = rhs.discreteKeys_;
   }
 
-  // error is the sum of the continuous and discrete negative
+  // Error is the sum of the continuous and discrete negative
   // log-likelihoods
   double error(const gtsam::Values& continuousVals,
                const DiscreteValues& discreteVals) const override {
     size_t assignment = discreteVals.at(discreteKeys_[0].first);
     double discrete_error = log(probs_[assignment]);
 
-    // subtraction because -log(p(A,B)) = -log p(A)p(B) = -log p(A) - log p(B)
+    // Subtraction because -log(p(A,B)) = -log p(A)p(B) = -log p(A) - log p(B)
     return factor_.error(continuousVals) - discrete_error;
   }
 

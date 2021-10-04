@@ -1,7 +1,7 @@
 /**
  * @file SemanticMaxMixtureFactor.h
- * @brief Discrete-Continuous Max-Mixture factor providing several extra interfaces for weight
- * updates and association retrieval
+ * @brief Discrete-Continuous Max-Mixture factor providing several extra
+ * interfaces for weight updates and association retrieval
  * @author Kurran Singh, singhk@mit.edu
  *
  * Copyright 2021 The Ambitious Folks of the MRG
@@ -9,12 +9,13 @@
 
 #pragma once
 
-#include "DCFactor.h"
-
 #include <math.h>
+
 #include <algorithm>
-#include <vector>
 #include <limits>
+#include <vector>
+
+#include "DCFactor.h"
 
 namespace dcsam {
 
@@ -40,11 +41,11 @@ class DCMaxMixtureFactor : public DCFactor {
   DCMaxMixtureFactor() = default;
 
   explicit DCMaxMixtureFactor(const gtsam::KeyVector& continuousKeys,
-                    const gtsam::DiscreteKeys& discreteKeys,
-                    const std::vector<DCFactorType> factors,
-                            const std::vector<double> weights,
-                            const bool normalized)
-    : Base(continuousKeys, discreteKeys), normalized_(normalized) {
+                              const gtsam::DiscreteKeys& discreteKeys,
+                              const std::vector<DCFactorType> factors,
+                              const std::vector<double> weights,
+                              const bool normalized)
+      : Base(continuousKeys, discreteKeys), normalized_(normalized) {
     factors_ = factors;
     for (int i = 0; i < weights.size(); i++) {
       log_weights_.push_back(log(weights[i]));
@@ -52,10 +53,10 @@ class DCMaxMixtureFactor : public DCFactor {
   }
 
   explicit DCMaxMixtureFactor(const gtsam::KeyVector& continuousKeys,
-                    const gtsam::DiscreteKeys& discreteKeys,
-                    const std::vector<DCFactorType> factors,
-                    const bool normalized)
-    : Base(continuousKeys, discreteKeys), normalized_(normalized) {
+                              const gtsam::DiscreteKeys& discreteKeys,
+                              const std::vector<DCFactorType> factors,
+                              const bool normalized)
+      : Base(continuousKeys, discreteKeys), normalized_(normalized) {
     factors_ = factors;
     for (int i = 0; i < factors_.size(); i++) {
       log_weights_.push_back(0);
@@ -73,20 +74,22 @@ class DCMaxMixtureFactor : public DCFactor {
   double error(const gtsam::Values& continuousVals,
                const DiscreteValues& discreteVals) const override {
     size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
-    double min_error = factors_[min_error_idx].
-                                error(continuousVals, discreteVals);
+    double min_error =
+        factors_[min_error_idx].error(continuousVals, discreteVals);
     if (normalized_) return min_error;
-    return min_error + factors_[min_error_idx].
-            logNormalizingConstant(continuousVals);
+    return min_error +
+           factors_[min_error_idx].logNormalizingConstant(continuousVals);
   }
 
   size_t getActiveFactorIdx(const gtsam::Values& continuousVals,
-                                 const DiscreteValues& discreteVals) const {
+                            const DiscreteValues& discreteVals) const {
     double min_error = std::numeric_limits<double>::infinity();
     size_t min_error_idx;
     for (int i = 0; i < factors_.size(); i++) {
-      double error = factors_[i].error(continuousVals, discreteVals) - log_weights_[i];
-      if (!normalized_) error += factors_[i].logNormalizingConstant(continuousVals);
+      double error =
+          factors_[i].error(continuousVals, discreteVals) - log_weights_[i];
+      if (!normalized_)
+        error += factors_[i].logNormalizingConstant(continuousVals);
 
       if (error < min_error) {
         min_error = error;
@@ -111,8 +114,7 @@ class DCMaxMixtureFactor : public DCFactor {
     for (size_t i = 0; i < factors_.size(); i++) {
       if (!factors_[i].equals(f.factors_[i])) return false;
     }
-    return ((log_weights_ == f.log_weights_) &&
-            (normalized_ == f.normalized_));
+    return ((log_weights_ == f.log_weights_) && (normalized_ == f.normalized_));
   }
 
   boost::shared_ptr<gtsam::GaussianFactor> linearize(
@@ -127,7 +129,7 @@ class DCMaxMixtureFactor : public DCFactor {
       const DiscreteValues& discreteVals) const override {
     size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
     return factors_[min_error_idx].toDecisionTreeFactor(continuousVals,
-                                                         discreteVals);
+                                                        discreteVals);
   }
 
   gtsam::FastVector<gtsam::Key> getAssociationKeys(
