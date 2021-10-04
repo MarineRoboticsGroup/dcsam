@@ -85,15 +85,8 @@ class DCMaxMixtureFactor : public DCFactor {
     double min_error = std::numeric_limits<double>::infinity();
     size_t min_error_idx;
     for (int i = 0; i < factors_.size(); i++) {
-      double raw_error = factors_[i].error(continuousVals, discreteVals) 
-                              - log_weights_[i];
-      if (normalized_) {
-        double error = raw_error; 
-      }
-      else {
-        double error = raw_error + 
-                factors_[min_error_idx].logNormalizingConstant(continuousVals);
-      }
+      double error = factors_[i].error(continuousVals, discreteVals) - log_weights_[i];
+      if (!normalized_) error += factors_[i].logNormalizingConstant(continuousVals);
 
       if (error < min_error) {
         min_error = error;
