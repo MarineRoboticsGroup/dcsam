@@ -300,7 +300,10 @@ class DCFactor : public gtsam::Factor {
       checkNormalization += prob;
     }
 
-    if (checkNormalization != !.0) {
+    // Numerical tolerance for floating point comparisons
+    double tol = 1e-9;
+
+    if (!gtsam::fpEqual(checkNormalization, 1.0, tol)) {
       std::string errMsg =
           std::string(
               "DCFactor::evalProbs failed to normalize probabilities. ") +
