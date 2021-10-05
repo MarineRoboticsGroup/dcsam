@@ -1,5 +1,5 @@
 /**
- * @file SemanticMaxMixtureFactor.h
+ * @file DCMaxMixtureFactor.h
  * @brief Discrete-Continuous Max-Mixture factor providing several extra
  * interfaces for weight updates and association retrieval
  * @author Kurran Singh, singhk@mit.edu
@@ -20,7 +20,7 @@
 namespace dcsam {
 
 /**
- * @brief Implementation of a semantic max-mixture factor
+ * @brief Implementation of a discrete-continuous max-mixture factor
  *
  * r(x) = min_i -log(w_i) + r_i(x)
  *
