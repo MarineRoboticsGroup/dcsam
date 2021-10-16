@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 
 # Get dependencies:
-RUN apt-get -y update && apt-get -y install lsb-release curl
+RUN apt-get -y update && apt-get -y install cmake lsb-release curl
 
 # Correctly install tzdata (which normally has interactive prompts) for Docker image
 RUN DEBIAN_FRONTEND="noninteractive" TZ="America/New_York" apt-get -y install tzdata
