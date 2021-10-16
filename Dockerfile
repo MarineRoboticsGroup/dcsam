@@ -3,7 +3,7 @@ FROM ubuntu:20.04
 # Get dependencies:
 RUN apt-get -y update && apt-get -y install sudo openssh-client \
   software-properties-common libgl1-mesa-dev libglew-dev libwayland-dev \
-  libxkbcommon-dev wayland-protocols
+  libxkbcommon-dev wayland-protocols git
 
 # Build and install GTSAM
 RUN git clone https://github.com/borglab/gtsam.git && \
