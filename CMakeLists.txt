@@ -15,8 +15,9 @@ find_package(Eigen3 3.3 REQUIRED)
 # add_definitions(-march=native)
 
 set(DCSAM_HDRS
-  include/dcsam/DCSAM.h
   include/dcsam/DCSAM_types.h
+  include/dcsam/DCSAM_utils.h
+  include/dcsam/DCSAM.h
   include/dcsam/DCFactor.h
   include/dcsam/DCContinuousFactor.h
   include/dcsam/DCDiscreteFactor.h
@@ -27,6 +28,7 @@ set(DCSAM_HDRS
   include/dcsam/SemanticBearingRangeFactor.h
   include/dcsam/SmartSemanticBearingRangeFactor.h
   include/dcsam/DCMaxMixtureFactor.h
+  include/dcsam/DCEMFactor.h
   )
 
 set(DCSAM_SRCS

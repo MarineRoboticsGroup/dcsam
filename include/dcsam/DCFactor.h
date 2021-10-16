@@ -18,7 +18,8 @@
 #include <string>
 #include <vector>
 
-#include "DCSAM_types.h"
+#include "dcsam/DCSAM_types.h"
+#include "dcsam/DCSAM_utils.h"
 
 namespace dcsam {
 
@@ -275,46 +276,8 @@ class DCFactor : public gtsam::Factor {
       // recover probability
       double logProb = -error(continuousVals, testDiscreteVals);
       logProbs.push_back(logProb);
-      if ((logProb != std::numeric_limits<double>::infinity()) &&
-          logProb > maxLogProb) {
-        maxLogProb = logProb;
-      }
     }
-
-    // After computing the max = "Z" of the log probabilities L_i, we compute
-    // the log of the normalizing constant, log S, where S = sum_j exp(L_j - Z).
-    double total = 0.0;
-    for (size_t i = 0; i < dk.second; i++) {
-      double probPrime = exp(logProbs[i] - maxLogProb);
-      total += probPrime;
-    }
-    double logTotal = log(total);
-
-    // Now we compute the (normalized) probability (for each i):
-    // p_i = exp(L_i - Z - log S)
-    double checkNormalization = 0.0;
-    std::vector<double> probs;
-    for (size_t i = 0; i < dk.second; i++) {
-      double prob = exp(logProbs[i] - maxLogProb - logTotal);
-      probs.push_back(prob);
-      checkNormalization += prob;
-    }
-
-    // Numerical tolerance for floating point comparisons
-    double tol = 1e-9;
-
-    if (!gtsam::fpEqual(checkNormalization, 1.0, tol)) {
-      std::string errMsg =
-          std::string(
-              "DCFactor::evalProbs failed to normalize probabilities. ") +
-          std::string("Expected value 1.0. Got value: ") +
-          std::to_string(checkNormalization) +
-          std::string(
-              "\n This could have resulted from numerical overflow/underflow.");
-      throw std::logic_error(errMsg);
-    }
-
-    return probs;
+    return expNormalize(logProbs);
   }
 
   /**
