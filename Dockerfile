@@ -1,15 +1,23 @@
 FROM ubuntu:20.04
 
-# Get dependencies:
-RUN apt-get -y update && apt-get -y install cmake lsb-release curl
-
 # Correctly install tzdata (which normally has interactive prompts) for Docker image
 RUN DEBIAN_FRONTEND="noninteractive" TZ="America/New_York" apt-get -y install tzdata
+
+# Get dependencies:
+RUN apt-get -y update && apt-get -y install cmake lsb-release curl build-essential
 
 # Update and install remaining package dependencies
 RUN apt-get -y update && apt-get -y install sudo openssh-client \
   software-properties-common libgl1-mesa-dev libglew-dev libwayland-dev \
   libxkbcommon-dev wayland-protocols git
+
+# GCC/G++9 needed
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test
+RUN apt-get -y update && apt-get -y install gcc-9 g++-9
+
+# Ensure we use the gcc-9 and g++-9
+RUN export CC=/usr/bin/gcc-9
+RUN export CXX=/usr/bin/g++-9
 
 # Build and install GTSAM
 RUN git clone https://github.com/borglab/gtsam.git && \
