@@ -227,7 +227,7 @@ class DCFactor : public gtsam::Factor {
     }
 
     // Compute the (negative) log of the normalizing constant
-    return -(factor.dim() * log(2.0 * M_PI) / 2.0) -
+    return (factor.dim() * log(2.0 * M_PI) / 2.0) -
            (log(infoMat.determinant()) / 2.0);
   }
 
