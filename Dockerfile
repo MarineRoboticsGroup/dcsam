@@ -1,12 +1,6 @@
 FROM ubuntu:20.04
 
 # Get dependencies:
-# RUN apt-get -y update && apt-get -y install lsb-release curl
-
-# Correctly install tzdata (which normally has interactive prompts) for Docker image
-RUN DEBIAN_FRONTEND="noninteractive" TZ="America/New_York" apt-get -y install tzdata
-
-# Update everybody
 RUN apt-get -y update && apt-get -y install sudo openssh-client \
   software-properties-common libgl1-mesa-dev libglew-dev libwayland-dev \
   libxkbcommon-dev wayland-protocols
