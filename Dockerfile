@@ -3,7 +3,7 @@ FROM ubuntu:20.04
 # Correctly install tzdata (which normally has interactive prompts) for Docker image
 RUN DEBIAN_FRONTEND="noninteractive" TZ="America/New_York" apt-get -y update && apt-get -y install tzdata
 
-# Get dependencies:
+# Get general dependencies:
 RUN apt-get -y update && apt-get -y install cmake lsb-release curl build-essential gnutls-bin
 
 # Update and install remaining package dependencies
@@ -34,17 +34,3 @@ RUN cd /usr/src/gtest && mkdir build && cd build && cmake .. -DBUILD_SHARED_LIBS
 
 # Eigen3.3 needed for DCSAM
 RUN apt-get -y update && apt-get -y install libeigen3-dev
-
-# RUN cd /usr/src/gmock && mkdir build && cd build && \
-#       cmake .. && make && sp /usr/src/gmock/*.a /usr/lib/
-
-# User setup
-#ARG USER_ID
-#RUN adduser --uid $USER_ID mrg --disabled-password --gecos="mrg"
-#RUN usermod -aG sudo mrg
-#RUN echo "mrg ALL=NOPASSWD: ALL" >> /etc/sudoers
-
-# Switch users NOTE(kevin): is this necessary?
-#USER mrg
-
-#WORKDIR /home/mrg/ws/src
