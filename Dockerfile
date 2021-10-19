@@ -32,6 +32,9 @@ RUN apt-get -y update && apt-get -y install libprotobuf-dev protobuf-compiler li
 
 RUN cd /usr/src/gtest && mkdir build && cd build && cmake .. -DBUILD_SHARED_LIBS=ON && make && ls lib && cp /usr/src/gtest/build/lib/* /usr/include/
 
+# Eigen3.3 needed for DCSAM
+RUN apt-get -y update && apt-get -y install libeigen3-dev
+
 # RUN cd /usr/src/gmock && mkdir build && cd build && \
 #       cmake .. && make && sp /usr/src/gmock/*.a /usr/lib/
 
