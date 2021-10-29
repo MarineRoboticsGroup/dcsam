@@ -64,6 +64,7 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
   for (auto &dcfactor : dcfg) {
     DCDiscreteFactor dcDiscreteFactor(dcfactor);
     discreteCombined.push_back(dcDiscreteFactor);
+    dcDiscreteFactors_.push_back(boost::make_shared<DCDiscreteFactor>(dcDiscreteFactor));
   }
 
   // Set discrete information in DCDiscreteFactors.
@@ -78,6 +79,7 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
     DCContinuousFactor dcContinuousFactor(dcfactor);
     dcContinuousFactor.updateDiscrete(currDiscrete_);
     combined.push_back(dcContinuousFactor);
+    dcContinuousFactors_.push_back(boost::make_shared<DCContinuousFactor>(dcContinuousFactor));
   }
 
   // Only the initialGuess needs to be provided for the continuous solver (not
@@ -115,12 +117,15 @@ void DCSAM::updateDiscreteInfo(const gtsam::Values &continuousVals,
   if (continuousVals.empty()) return;
   // TODO(any): inefficient, consider storing indices of DCFactors
   // Update the DC factors with new continuous information.
-  for (size_t j = 0; j < dfg_.size(); j++) {
+  for (auto factor : dcDiscreteFactors_) {
     boost::shared_ptr<DCDiscreteFactor> dcDiscrete =
-        boost::dynamic_pointer_cast<DCDiscreteFactor>(dfg_[j]);
+        boost::static_pointer_cast<DCDiscreteFactor>(factor);
     if (dcDiscrete) {
       dcDiscrete->updateContinuous(continuousVals);
       dcDiscrete->updateDiscrete(discreteVals);
+    }
+    else {
+      std::cout << "something is wrong with DCDiscreteFactors" << std::endl;
     }
   }
 }
@@ -137,32 +142,36 @@ void DCSAM::updateContinuous() {
 void DCSAM::updateContinuousInfo(const DiscreteValues &discreteVals,
                                  const gtsam::NonlinearFactorGraph &newFactors,
                                  const gtsam::Values &initialGuess) {
-  // ISAM2UpdateParams updateParams;
-  // gtsam::FastMap<gtsam::FactorIndex, gtsam::KeySet> newAffectedKeys;
-  // for (size_t j = 0; j < dcContinuousFactors.size(); j++) {
-  //   dcContinuousFactors[j]->updateDiscrete(discreteVals);
-  //   for (const gtsam::Key &k : dcContinuousFactors[j]->keys()) {
-  //     newAffectedKeys[dcIdxToFactor.at(j)].insert(k);
-  //   }
-  // }
-  // updateParams.newAffectedKeys = std::move(newAffectedKeys);
-
-  // NOTE: Slow for now, see above for faster method?
   gtsam::ISAM2UpdateParams updateParams;
   gtsam::FastMap<gtsam::FactorIndex, gtsam::KeySet> newAffectedKeys;
-
-  gtsam::NonlinearFactorGraph graph = isam_.getFactorsUnsafe();
-  for (size_t j = 0; j < graph.size(); j++) {
+  for (size_t j = 0; j < dcContinuousFactors_.size(); j++) {
     boost::shared_ptr<DCContinuousFactor> dcContinuousFactor =
-        boost::dynamic_pointer_cast<DCContinuousFactor>(graph[j]);
-    if (dcContinuousFactor) {
-      dcContinuousFactor->updateDiscrete(discreteVals);
-      for (const gtsam::Key &k : dcContinuousFactor->keys()) {
-        newAffectedKeys[j].insert(k);
-      }
+      boost::static_pointer_cast<DCContinuousFactor>(dcContinuousFactors_[j]);
+    dcContinuousFactor->updateDiscrete(discreteVals);
+    for (const gtsam::Key &k : dcContinuousFactor->keys()) {
+      // newAffectedKeys[dcIdxToFactor_.at(j)].insert(k);
+      newAffectedKeys[j].insert(k);
+
     }
   }
   updateParams.newAffectedKeys = std::move(newAffectedKeys);
+
+  // NOTE: Slow for now, see above for faster method?
+  // gtsam::ISAM2UpdateParams updateParams;
+  // gtsam::FastMap<gtsam::FactorIndex, gtsam::KeySet> newAffectedKeys;
+
+  // gtsam::NonlinearFactorGraph graph = isam_.getFactorsUnsafe();
+  // for (size_t j = 0; j < graph.size(); j++) {
+  //   boost::shared_ptr<DCContinuousFactor> dcContinuousFactor =
+  //       boost::dynamic_pointer_cast<DCContinuousFactor>(graph[j]);
+  //   if (dcContinuousFactor) {
+  //     dcContinuousFactor->updateDiscrete(discreteVals);
+  //     for (const gtsam::Key &k : dcContinuousFactor->keys()) {
+  //       newAffectedKeys[j].insert(k);
+  //     }
+  //   }
+  // }
+  // updateParams.newAffectedKeys = std::move(newAffectedKeys);
   // NOTE: I am not yet 100% sure this is the right way to handle this update.
   isam_.update(newFactors, initialGuess, updateParams);
 }
