@@ -63,8 +63,9 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
   // component
   for (auto &dcfactor : dcfg) {
     DCDiscreteFactor dcDiscreteFactor(dcfactor);
-    discreteCombined.push_back(dcDiscreteFactor);
-    dcDiscreteFactors_.push_back(boost::make_shared<DCDiscreteFactor>(dcDiscreteFactor));
+    auto sharedDiscrete = boost::make_shared<DCDiscreteFactor>(dcDiscreteFactor);
+    discreteCombined.push_back(sharedDiscrete);
+    dcDiscreteFactors_.push_back(sharedDiscrete);
   }
 
   // Set discrete information in DCDiscreteFactors.
@@ -77,9 +78,10 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
     // NOTE: I think maybe this should be a boost::shared_ptr to avoid copy
     // construction
     DCContinuousFactor dcContinuousFactor(dcfactor);
-    dcContinuousFactor.updateDiscrete(currDiscrete_);
-    combined.push_back(dcContinuousFactor);
-    dcContinuousFactors_.push_back(boost::make_shared<DCContinuousFactor>(dcContinuousFactor));
+    auto sharedContinuous = boost::make_shared<DCContinuousFactor>(dcContinuousFactor);
+    sharedContinuous->updateDiscrete(currDiscrete_);
+    combined.push_back(sharedContinuous);
+    dcContinuousFactors_.push_back(sharedContinuous);
   }
 
   // Only the initialGuess needs to be provided for the continuous solver (not
@@ -117,6 +119,7 @@ void DCSAM::updateDiscreteInfo(const gtsam::Values &continuousVals,
   if (continuousVals.empty()) return;
   // TODO(any): inefficient, consider storing indices of DCFactors
   // Update the DC factors with new continuous information.
+  std::cout << "Discrete factors size: " << dcDiscreteFactors_.size() << std::endl;
   for (auto factor : dcDiscreteFactors_) {
     boost::shared_ptr<DCDiscreteFactor> dcDiscrete =
         boost::static_pointer_cast<DCDiscreteFactor>(factor);
