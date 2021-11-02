@@ -75,8 +75,6 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
   currDiscrete_ = solveDiscrete();
 
   for (auto &dcfactor : dcfg) {
-    // NOTE: I think maybe this should be a boost::shared_ptr to avoid copy
-    // construction
     DCContinuousFactor dcContinuousFactor(dcfactor);
     auto sharedContinuous = boost::make_shared<DCContinuousFactor>(dcContinuousFactor);
     sharedContinuous->updateDiscrete(currDiscrete_);
@@ -117,19 +115,11 @@ void DCSAM::updateDiscrete(
 void DCSAM::updateDiscreteInfo(const gtsam::Values &continuousVals,
                                const DiscreteValues &discreteVals) {
   if (continuousVals.empty()) return;
-  // TODO(any): inefficient, consider storing indices of DCFactors
-  // Update the DC factors with new continuous information.
-  std::cout << "Discrete factors size: " << dcDiscreteFactors_.size() << std::endl;
   for (auto factor : dcDiscreteFactors_) {
     boost::shared_ptr<DCDiscreteFactor> dcDiscrete =
         boost::static_pointer_cast<DCDiscreteFactor>(factor);
-    if (dcDiscrete) {
       dcDiscrete->updateContinuous(continuousVals);
       dcDiscrete->updateDiscrete(discreteVals);
-    }
-    else {
-      std::cout << "something is wrong with DCDiscreteFactors" << std::endl;
-    }
   }
 }
 
@@ -138,10 +128,6 @@ void DCSAM::updateContinuous() {
   currContinuous_ = isam_.calculateEstimate();
 }
 
-// NOTE: for iSAM(2) requires special procedure (cf Jose Luis Blanco Github
-// post)
-// see here:
-// https://github.com/borglab/gtsam/pull/25/files#diff-277639578c861563a471b12776f86ad0b6317f61103adaae455e0cbe05899747R58
 void DCSAM::updateContinuousInfo(const DiscreteValues &discreteVals,
                                  const gtsam::NonlinearFactorGraph &newFactors,
                                  const gtsam::Values &initialGuess) {
@@ -152,30 +138,11 @@ void DCSAM::updateContinuousInfo(const DiscreteValues &discreteVals,
       boost::static_pointer_cast<DCContinuousFactor>(dcContinuousFactors_[j]);
     dcContinuousFactor->updateDiscrete(discreteVals);
     for (const gtsam::Key &k : dcContinuousFactor->keys()) {
-      // newAffectedKeys[dcIdxToFactor_.at(j)].insert(k);
       newAffectedKeys[j].insert(k);
 
     }
   }
   updateParams.newAffectedKeys = std::move(newAffectedKeys);
-
-  // NOTE: Slow for now, see above for faster method?
-  // gtsam::ISAM2UpdateParams updateParams;
-  // gtsam::FastMap<gtsam::FactorIndex, gtsam::KeySet> newAffectedKeys;
-
-  // gtsam::NonlinearFactorGraph graph = isam_.getFactorsUnsafe();
-  // for (size_t j = 0; j < graph.size(); j++) {
-  //   boost::shared_ptr<DCContinuousFactor> dcContinuousFactor =
-  //       boost::dynamic_pointer_cast<DCContinuousFactor>(graph[j]);
-  //   if (dcContinuousFactor) {
-  //     dcContinuousFactor->updateDiscrete(discreteVals);
-  //     for (const gtsam::Key &k : dcContinuousFactor->keys()) {
-  //       newAffectedKeys[j].insert(k);
-  //     }
-  //   }
-  // }
-  // updateParams.newAffectedKeys = std::move(newAffectedKeys);
-  // NOTE: I am not yet 100% sure this is the right way to handle this update.
   isam_.update(newFactors, initialGuess, updateParams);
 }
 
