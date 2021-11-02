@@ -214,9 +214,8 @@ class DCSAM {
   gtsam::Values currContinuous_;
   DiscreteValues currDiscrete_;
 
-  // NOTE: will be needed for more sophisticated iSAM2 bookkeeping (rather than
-  // naively iterating over all factors as we do now)
+
   std::vector<DCContinuousFactor::shared_ptr> dcContinuousFactors_;
-  std::map<size_t, gtsam::FactorIndex> dcIdxToFactor_;
+  gtsam::FastVector<gtsam::DiscreteFactor::shared_ptr> dcDiscreteFactors_;
 };
 }  // namespace dcsam
