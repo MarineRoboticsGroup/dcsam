@@ -156,9 +156,6 @@ class DCEMFactor : public DCFactor {
       const DiscreteValues& discreteVals) const override {
     std::vector<boost::shared_ptr<gtsam::GaussianFactor>> gfs;
 
-    // Create a set of matrices for all keys
-    std::vector<std::vector<gtsam::Matrix>> Hs;
-
     // Start by computing all errors, so we can get the component weights.
     std::vector<double> errors =
         computeComponentErrors(continuousVals, discreteVals);
@@ -188,6 +185,12 @@ class DCEMFactor : public DCFactor {
       // Passing `appendOneDimension=true` adds a dimension for the `b` vector
       // automatically.
       gtsam::VerticalBlockMatrix Ab(dimensions, factors_[i].dim(), true);
+
+      // Populate Ab with weighted Jacobian sqrt(w)*A and right-hand side vector
+      // sqrt(w)*b.
+      double sqrt_weight = sqrt(componentWeights[i]);
+      Ab(0) = sqrt_weight * jacobianAb.first;
+      Ab(1) = sqrt_weight * jacobianAb.second;
 
       // Create a `JacobianFactor` from the system [A b] and add it to the
       // `GaussianFactorGraph`.
