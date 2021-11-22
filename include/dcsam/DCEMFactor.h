@@ -26,10 +26,13 @@ namespace dcsam {
  * r(x) = sum_i w'_i * r_i(x),
  *
  * where
- * w'_i = w_i * p(z | x, l_i); sum_i w'_i = 1.
+ * w'_i = w_i * p(z | x, h_i); sum_i w'_i = 1.
+ * and h_i here represents the "i-th" hypothesis
  *
  * The error returned from this factor is a weighted combination of the
- * component factor errors.
+ * component factor errors. "x" can be comprised jointly of discrete and
+ * continuous values. Prior hypothesis weights can be included if desired via
+ * the `weights` parameter.
  */
 template <class DCFactorType>
 class DCEMFactor : public DCFactor {
@@ -126,11 +129,13 @@ class DCEMFactor : public DCFactor {
 
   // TODO(kevin) Need to adjust Jacobian size!
   size_t dim() const override {
-    if (factors_.size() > 0) {
-      return factors_[0].dim();
-    } else {
-      return 0;
+    size_t total = 0;
+    // Each component factor `i` requires `factors_[i].dim()` rows in the
+    // overall Jacobian.
+    for (size_t i = 0; i < factors_.size(); i++) {
+      total += factors_[i].dim();
     }
+    return total;
   }
 
   bool equals(const DCFactor& other, double tol = 1e-9) const {
@@ -143,26 +148,60 @@ class DCEMFactor : public DCFactor {
     return ((log_weights_ == f.log_weights_) && (normalized_ == f.normalized_));
   }
 
-  // TODO(kevin) Need to adjust linearization!
+  /*
+   * Jacobian magic
+   */
   boost::shared_ptr<gtsam::GaussianFactor> linearize(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
     std::vector<boost::shared_ptr<gtsam::GaussianFactor>> gfs;
+
     // Create a set of matrices for all keys
     std::vector<std::vector<gtsam::Matrix>> Hs;
-    // For each factor, compute the jacobian
-    for (const gtsam::Key& k : keys_) {
-      for (size_t i = 0; i < factors_.size(); i++) {
-        boost::shared_ptr<gtsam::GaussianFactor> gf =
-            factors_[i].linearize(continuousVals, discreteVals);
-        // for each key in factor keys, get the appropriate jacobian and add it
-        // to the stack?
-        std::pair<gtsam::Matrix, gtsam::Vector> jacobianAb = gf->jacobian();
-      }
+
+    // Start by computing all errors, so we can get the component weights.
+    std::vector<double> errors =
+        computeComponentErrors(continuousVals, discreteVals);
+
+    // Weights for each component are obtained by normalizing the errors.
+    std::vector<double> componentWeights = expNormalize(errors);
+
+    // We want to temporarily build a GaussianFactorGraph to construct the
+    // Jacobian for this whole factor.
+    gtsam::GaussianFactorGraph gfg;
+
+    for (size_t i = 0; i < factors_.size(); i++) {
+      // First get the GaussianFactor obtained by linearizing `factors_[i]`
+      boost::shared_ptr<gtsam::GaussianFactor> gf =
+          factors_[i].linearize(continuousVals, discreteVals);
+
+      // Recover the Jacobian `A` and right-hand-side vector `b` with
+      // noise models "baked in."
+      std::pair<gtsam::Matrix, gtsam::Vector> jacobianAb = gf->jacobian();
+
+      // Vector specifying vertical block dimensions. We want one block with
+      // the right number of columns for jacobianAb.
+      std::vector<size_t> dimensions(1, jacobianAb.first.cols());
+
+      // Create a vertical block matrix with one vertical block of size
+      // A.cols() and height equal to the number of rows in the factor.
+      // Passing `appendOneDimension=true` adds a dimension for the `b` vector
+      // automatically.
+      gtsam::VerticalBlockMatrix Ab(dimensions, factors_[i].dim(), true);
+
+      // Create a `JacobianFactor` from the system [A b] and add it to the
+      // `GaussianFactorGraph`.
+      gtsam::JacobianFactor jf(factors_[i].keys(), Ab);
+      gfg.add(jf);
     }
-    // Stack Jacobians
-    size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
-    return factors_[min_error_idx].linearize(continuousVals, discreteVals);
+
+    // Stack Jacobians to build combined factor.
+    // gtsam::JacobianFactor fullJacobian(gfg);
+
+    // size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
+    // return factors_[min_error_idx].linearize(continuousVals, discreteVals);
+
+    return boost::make_shared<gtsam::JacobianFactor>(gfg);
   }
 
   gtsam::DecisionTreeFactor toDecisionTreeFactor(
