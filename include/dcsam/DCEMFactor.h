@@ -80,7 +80,7 @@ class DCEMFactor : public DCFactor {
                const DiscreteValues& discreteVals) const override {
     // Retrieve the error for each component.
     std::vector<double> errors =
-        computeComponentErrors(continuousVals, discreteVals);
+        computeComponentLogProbs(continuousVals, discreteVals);
 
     // Weights for each component are obtained by normalizing the errors.
     std::vector<double> componentWeights = expNormalize(errors);
@@ -93,20 +93,20 @@ class DCEMFactor : public DCFactor {
     return total_error;
   }
 
-  std::vector<double> computeComponentErrors(
+  std::vector<double> computeComponentLogProbs(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const {
     // Container for errors, where:
     //   error_i = error of component factor i - log_weights_i
-    std::vector<double> errors;
+    std::vector<double> logprobs;
     for (int i = 0; i < factors_.size(); i++) {
       double error =
           factors_[i].error(continuousVals, discreteVals) - log_weights_[i];
       if (!normalized_)
         error += factors_[i].logNormalizingConstant(continuousVals);
-      errors.push_back(error);
+      logprobs.push_back(-error);
     }
-    return errors;
+    return logprobs;
   }
 
   size_t getActiveFactorIdx(const gtsam::Values& continuousVals,
@@ -127,7 +127,6 @@ class DCEMFactor : public DCFactor {
     return min_error_idx;
   }
 
-  // TODO(kevin) Need to adjust Jacobian size!
   size_t dim() const override {
     size_t total = 0;
     // Each component factor `i` requires `factors_[i].dim()` rows in the
@@ -158,7 +157,7 @@ class DCEMFactor : public DCFactor {
 
     // Start by computing all errors, so we can get the component weights.
     std::vector<double> errors =
-        computeComponentErrors(continuousVals, discreteVals);
+        computeComponentLogProbs(continuousVals, discreteVals);
 
     // Weights for each component are obtained by normalizing the errors.
     std::vector<double> componentWeights = expNormalize(errors);
@@ -172,29 +171,29 @@ class DCEMFactor : public DCFactor {
       boost::shared_ptr<gtsam::GaussianFactor> gf =
           factors_[i].linearize(continuousVals, discreteVals);
 
-      // Recover the Jacobian `A` and right-hand-side vector `b` with
-      // noise models "baked in."
-      std::pair<gtsam::Matrix, gtsam::Vector> jacobianAb = gf->jacobian();
+      gtsam::JacobianFactor jf_component(*gf);
 
-      // Vector specifying vertical block dimensions. We want one block with
-      // the right number of columns for jacobianAb.
-      std::vector<size_t> dimensions(1, jacobianAb.first.cols());
+      // Recover the [A b] matrix with Jacobian A and right-hand side vector b,
+      // with noise models "baked in," as a vertical block matrix.
+      gtsam::VerticalBlockMatrix Ab = jf_component.matrixObject();
 
-      // Create a vertical block matrix with one vertical block of size
-      // A.cols() and height equal to the number of rows in the factor.
-      // Passing `appendOneDimension=true` adds a dimension for the `b` vector
-      // automatically.
-      gtsam::VerticalBlockMatrix Ab(dimensions, factors_[i].dim(), true);
+      // Copy Ab so we can reweight it appropriately.
+      gtsam::VerticalBlockMatrix Ab_weighted = Ab;
 
-      // Populate Ab with weighted Jacobian sqrt(w)*A and right-hand side vector
-      // sqrt(w)*b.
+      // Populate Ab_weighted with weighted Jacobian sqrt(w)*A and right-hand
+      // side vector sqrt(w)*b.
       double sqrt_weight = sqrt(componentWeights[i]);
-      Ab(0) = sqrt_weight * jacobianAb.first;
-      Ab(1) = sqrt_weight * jacobianAb.second;
+      std::cout << "sqrt weight (i = " << i << "): " << sqrt_weight
+                << std::endl;
+      std::cout << "nblocks: " << Ab_weighted.nBlocks() << std::endl;
+      std::cout << "keys: " << factors_[i].keys().size() << std::endl;
+      for (size_t k = 0; k < Ab_weighted.nBlocks(); k++) {
+        Ab_weighted(k) = sqrt_weight * Ab(k);
+      }
 
       // Create a `JacobianFactor` from the system [A b] and add it to the
       // `GaussianFactorGraph`.
-      gtsam::JacobianFactor jf(factors_[i].keys(), Ab);
+      gtsam::JacobianFactor jf(factors_[i].keys(), Ab_weighted);
       gfg.add(jf);
     }
 
@@ -207,9 +206,17 @@ class DCEMFactor : public DCFactor {
     return boost::make_shared<gtsam::JacobianFactor>(gfg);
   }
 
+  // TODO(kevin): make this a proper EM factor for the discrete part.
   gtsam::DecisionTreeFactor toDecisionTreeFactor(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
+    // Start by computing all errors, so we can get the component weights.
+    std::vector<double> errors =
+        computeComponentLogProbs(continuousVals, discreteVals);
+
+    // Weights for each component are obtained by normalizing the errors.
+    std::vector<double> componentWeights = expNormalize(errors);
+
     size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
     return factors_[min_error_idx].toDecisionTreeFactor(continuousVals,
                                                         discreteVals);
