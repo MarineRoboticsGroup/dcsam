@@ -72,6 +72,7 @@ class SemanticBearingRangeFactor : public DCFactor {
     this->probs_ = rhs.probs_;
     this->keys_ = rhs.keys_;
     this->discreteKeys_ = rhs.discreteKeys_;
+    return *this;
   }
 
   // Error is the sum of the continuous and discrete negative
