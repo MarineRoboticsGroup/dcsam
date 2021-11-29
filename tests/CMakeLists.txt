@@ -22,7 +22,7 @@ add_executable(testDCSAM testDCSAM.cpp)
 if (ENABLE_PLOTTING)
   target_link_libraries(testDCSAM dcsam gtest gtest_main matplotlibcpp)
 else()
-  target_link_libraries(testDCSAM dcsam gtest gtest_main)
+  target_link_libraries(testDCSAM dcsam /usr/local/lib/libgtest.a /usr/local/lib/libgtest_main.a gtsam)
 endif()
 
 add_test(TestDCSAM testDCSAM)

@@ -164,8 +164,8 @@ DCValues DCSAM::calculateEstimate() const {
 DCMarginals DCSAM::getMarginals(const gtsam::NonlinearFactorGraph &graph,
                                 const gtsam::Values &continuousEst,
                                 const gtsam::DiscreteFactorGraph &dfg) {
-  return DCMarginals{.continuous = gtsam::Marginals(graph, continuousEst),
-                     .discrete = gtsam::DiscreteMarginals(dfg)};
+  return DCMarginals(gtsam::Marginals(graph, continuousEst),
+                     gtsam::DiscreteMarginals(dfg));
 }
 
 }  // namespace dcsam
