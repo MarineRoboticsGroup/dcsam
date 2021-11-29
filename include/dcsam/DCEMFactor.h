@@ -52,7 +52,7 @@ class DCEMFactor : public DCFactor {
                       const std::vector<double> weights, const bool normalized)
       : Base(continuousKeys, discreteKeys), normalized_(normalized) {
     factors_ = factors;
-    for (int i = 0; i < weights.size(); i++) {
+    for (size_t i = 0; i < weights.size(); i++) {
       log_weights_.push_back(log(weights[i]));
     }
   }
@@ -63,7 +63,7 @@ class DCEMFactor : public DCFactor {
                       const bool normalized)
       : Base(continuousKeys, discreteKeys), normalized_(normalized) {
     factors_ = factors;
-    for (int i = 0; i < factors_.size(); i++) {
+    for (size_t i = 0; i < factors_.size(); i++) {
       log_weights_.push_back(0);
     }
   }
@@ -78,17 +78,17 @@ class DCEMFactor : public DCFactor {
 
   double error(const gtsam::Values& continuousVals,
                const DiscreteValues& discreteVals) const override {
-    // Retrieve the error for each component.
-    std::vector<double> errors =
+    // Retrieve the log prob for each component.
+    std::vector<double> logprobs =
         computeComponentLogProbs(continuousVals, discreteVals);
 
     // Weights for each component are obtained by normalizing the errors.
-    std::vector<double> componentWeights = expNormalize(errors);
+    std::vector<double> componentWeights = expNormalize(logprobs);
 
     // Compute the total error as the weighted sum of component errors.
     double total_error = 0.0;
-    for (size_t i = 0; i < errors.size(); i++) {
-      total_error += componentWeights[i] * errors[i];
+    for (size_t i = 0; i < logprobs.size(); i++) {
+      total_error += componentWeights[i] * (-logprobs[i]);
     }
     return total_error;
   }
@@ -99,7 +99,7 @@ class DCEMFactor : public DCFactor {
     // Container for errors, where:
     //   error_i = error of component factor i - log_weights_i
     std::vector<double> logprobs;
-    for (int i = 0; i < factors_.size(); i++) {
+    for (size_t i = 0; i < factors_.size(); i++) {
       double error =
           factors_[i].error(continuousVals, discreteVals) - log_weights_[i];
       if (!normalized_)
@@ -113,7 +113,7 @@ class DCEMFactor : public DCFactor {
                             const DiscreteValues& discreteVals) const {
     double min_error = std::numeric_limits<double>::infinity();
     size_t min_error_idx;
-    for (int i = 0; i < factors_.size(); i++) {
+    for (size_t i = 0; i < factors_.size(); i++) {
       double error =
           factors_[i].error(continuousVals, discreteVals) - log_weights_[i];
       if (!normalized_)
@@ -167,6 +167,7 @@ class DCEMFactor : public DCFactor {
     gtsam::GaussianFactorGraph gfg;
 
     for (size_t i = 0; i < factors_.size(); i++) {
+      // std::cout << "i = " << i << std::endl;
       // First get the GaussianFactor obtained by linearizing `factors_[i]`
       boost::shared_ptr<gtsam::GaussianFactor> gf =
           factors_[i].linearize(continuousVals, discreteVals);
@@ -183,10 +184,7 @@ class DCEMFactor : public DCFactor {
       // Populate Ab_weighted with weighted Jacobian sqrt(w)*A and right-hand
       // side vector sqrt(w)*b.
       double sqrt_weight = sqrt(componentWeights[i]);
-      std::cout << "sqrt weight (i = " << i << "): " << sqrt_weight
-                << std::endl;
-      std::cout << "nblocks: " << Ab_weighted.nBlocks() << std::endl;
-      std::cout << "keys: " << factors_[i].keys().size() << std::endl;
+
       for (size_t k = 0; k < Ab_weighted.nBlocks(); k++) {
         Ab_weighted(k) = sqrt_weight * Ab(k);
       }
@@ -198,10 +196,6 @@ class DCEMFactor : public DCFactor {
     }
 
     // Stack Jacobians to build combined factor.
-    // gtsam::JacobianFactor fullJacobian(gfg);
-
-    // size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
-    // return factors_[min_error_idx].linearize(continuousVals, discreteVals);
 
     return boost::make_shared<gtsam::JacobianFactor>(gfg);
   }
@@ -210,16 +204,33 @@ class DCEMFactor : public DCFactor {
   gtsam::DecisionTreeFactor toDecisionTreeFactor(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
-    // Start by computing all errors, so we can get the component weights.
-    std::vector<double> errors =
+    // Start by computing all log probs, so we can get the component weights.
+    std::vector<double> logprobs =
         computeComponentLogProbs(continuousVals, discreteVals);
 
     // Weights for each component are obtained by normalizing the errors.
-    std::vector<double> componentWeights = expNormalize(errors);
+    std::vector<double> componentWeights = expNormalize(logprobs);
 
-    size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
-    return factors_[min_error_idx].toDecisionTreeFactor(continuousVals,
-                                                        discreteVals);
+    std::vector<gtsam::DecisionTreeFactor> unary_factors;
+    for (size_t i = 0; i < factors_.size(); i++) {
+      gtsam::DiscreteKeys factor_dkeys = factors_[i].discreteKeys();
+      assert(factor_dkeys.size() == 1);
+      std::vector<double> factor_probs =
+          factors_[i].evalProbs(factor_dkeys[0], continuousVals);
+      std::vector<double> log_weighted_factor_probs;
+      for (size_t k = 0; k < factor_probs.size(); k++) {
+        log_weighted_factor_probs.push_back(componentWeights[i] *
+                                            log(factor_probs[k]));
+      }
+      std::vector<double> new_probs = expNormalize(log_weighted_factor_probs);
+      gtsam::DecisionTreeFactor unary(factor_dkeys[0], new_probs);
+      unary_factors.push_back(unary);
+    }
+    gtsam::DecisionTreeFactor converted;
+    for (size_t i = 0; i < unary_factors.size(); i++) {
+      converted = converted * unary_factors[i];
+    }
+    return converted;
   }
 
   gtsam::FastVector<gtsam::Key> getAssociationKeys(
@@ -235,7 +246,7 @@ class DCEMFactor : public DCFactor {
                 << std::endl;
       return;
     }
-    for (int i = 0; i < weights.size(); i++) {
+    for (size_t i = 0; i < weights.size(); i++) {
       log_weights_[i] = log(weights[i]);
     }
   }
