@@ -25,7 +25,7 @@ class DiscreteMarginalsOrdered : public gtsam::DiscreteMarginals {
   using Base = gtsam::DiscreteMarginals;
   DiscreteMarginalsOrdered(const gtsam::DiscreteFactorGraph &graph,
                            const gtsam::Ordering::OrderingType &orderingType =
-                               gtsam::Ordering::OrderingType::COLAMD)
+                               gtsam::Ordering::OrderingType::NATURAL)
       : Base(gtsam::DiscreteFactorGraph()) {
     gtsam::Ordering ordering;
     if (orderingType == gtsam::Ordering::OrderingType::COLAMD) {
