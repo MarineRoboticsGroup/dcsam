@@ -28,6 +28,7 @@ set(DCSAM_HDRS
   include/dcsam/SemanticBearingRangeFactor.h
   include/dcsam/SmartSemanticBearingRangeFactor.h
   include/dcsam/DCMaxMixtureFactor.h
+  include/dcsam/DCSumMixtureFactor.h
   include/dcsam/DCEMFactor.h
   include/dcsam/DiscreteMarginalsOrdered.h
   )
