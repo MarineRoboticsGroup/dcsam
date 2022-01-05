@@ -142,7 +142,12 @@ class DCSumMixtureFactor : public DCFactor {
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
     size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
-    return factors_[min_error_idx].linearize(continuousVals, discreteVals);
+
+    // Get component for "dominant" factor
+    boost::shared_ptr<gtsam::GaussianFactor> gf_max =
+        factors_[min_error_idx].linearize(continuousVals, discreteVals);
+
+    return gf_max;
   }
 
   gtsam::DecisionTreeFactor uniformDecisionTreeFactor(
