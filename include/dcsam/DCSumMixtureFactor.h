@@ -71,12 +71,35 @@ class DCSumMixtureFactor : public DCFactor {
 
   double error(const gtsam::Values& continuousVals,
                const DiscreteValues& discreteVals) const override {
-    size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
-    double min_error =
-        factors_[min_error_idx].error(continuousVals, discreteVals);
-    if (normalized_) return min_error;
-    return min_error +
-           factors_[min_error_idx].logNormalizingConstant(continuousVals);
+    // Retrieve the log prob for each component.
+    std::vector<double> logprobs =
+        computeComponentLogProbs(continuousVals, discreteVals);
+
+    // Weights for each component are obtained by normalizing the errors.
+    std::vector<double> componentWeights = expNormalize(logprobs);
+
+    // Compute the total error as the weighted sum of component errors.
+    double total_error = 0.0;
+    for (size_t i = 0; i < logprobs.size(); i++) {
+      total_error += componentWeights[i] * (-logprobs[i]);
+    }
+    return total_error;
+  }
+
+  std::vector<double> computeComponentLogProbs(
+      const gtsam::Values& continuousVals,
+      const DiscreteValues& discreteVals) const {
+    // Container for errors, where:
+    //   error_i = error of component factor i - log_weights_i
+    std::vector<double> logprobs;
+    for (size_t i = 0; i < factors_.size(); i++) {
+      double error =
+          factors_[i].error(continuousVals, discreteVals) - log_weights_[i];
+      if (!normalized_)
+        error += factors_[i].logNormalizingConstant(continuousVals);
+      logprobs.push_back(-error);
+    }
+    return logprobs;
   }
 
   size_t getActiveFactorIdx(const gtsam::Values& continuousVals,
