@@ -74,7 +74,12 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
   updateDiscrete(discreteCombined, currContinuous_, currDiscrete_);
 
   // Update current discrete state estimate.
-  currDiscrete_ = solveDiscrete();
+  if (!initialGuessContinuous.empty() && initialGuessDiscrete.empty() &&
+      discreteCombined.empty()) {
+    // This is an odometry?
+  } else {
+    currDiscrete_ = solveDiscrete();
+  }
 
   for (auto &dcfactor : dcfg) {
     DCContinuousFactor dcContinuousFactor(dcfactor);
@@ -156,9 +161,10 @@ DiscreteValues DCSAM::solveDiscrete() const {
 DCValues DCSAM::calculateEstimate() const {
   // NOTE: if we have these cached from solves, we could presumably just return
   // the cached values.
-  gtsam::Values continuousVals = isam_.calculateEstimate();
-  DiscreteValues discreteVals = (*dfg_.optimize());
-  DCValues dcValues(continuousVals, discreteVals);
+  // gtsam::Values continuousVals = isam_.calculateEstimate();
+  // DiscreteValues discreteVals = (*dfg_.optimize());
+  // DCValues dcValues(continuousVals, discreteVals);
+  DCValues dcValues(currContinuous_, currDiscrete_);
   return dcValues;
 }
 
