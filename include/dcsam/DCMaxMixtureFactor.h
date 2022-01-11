@@ -76,9 +76,10 @@ class DCMaxMixtureFactor : public DCFactor {
     size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
     double min_error =
         factors_[min_error_idx].error(continuousVals, discreteVals);
-    if (normalized_) return min_error;
+    if (normalized_) return min_error - log_weights_[min_error_idx];
     return min_error +
-           factors_[min_error_idx].logNormalizingConstant(continuousVals);
+           factors_[min_error_idx].logNormalizingConstant(continuousVals) -
+           log_weights_[min_error_idx];
   }
 
   size_t getActiveFactorIdx(const gtsam::Values& continuousVals,
