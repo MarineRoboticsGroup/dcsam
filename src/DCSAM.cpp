@@ -161,10 +161,9 @@ DiscreteValues DCSAM::solveDiscrete() const {
 DCValues DCSAM::calculateEstimate() const {
   // NOTE: if we have these cached from solves, we could presumably just return
   // the cached values.
-  // gtsam::Values continuousVals = isam_.calculateEstimate();
-  // DiscreteValues discreteVals = (*dfg_.optimize());
-  // DCValues dcValues(continuousVals, discreteVals);
-  DCValues dcValues(currContinuous_, currDiscrete_);
+  gtsam::Values continuousVals = isam_.calculateEstimate();
+  DiscreteValues discreteVals = (*dfg_.optimize());
+  DCValues dcValues(continuousVals, discreteVals);
   return dcValues;
 }
 
