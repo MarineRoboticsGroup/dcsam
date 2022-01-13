@@ -156,11 +156,11 @@ class DCEMFactor : public DCFactor {
     std::vector<boost::shared_ptr<gtsam::GaussianFactor>> gfs;
 
     // Start by computing all errors, so we can get the component weights.
-    std::vector<double> errors =
+    std::vector<double> logprobs =
         computeComponentLogProbs(continuousVals, discreteVals);
 
     // Weights for each component are obtained by normalizing the errors.
-    std::vector<double> componentWeights = expNormalize(errors);
+    std::vector<double> componentWeights = expNormalize(logprobs);
 
     // We want to temporarily build a GaussianFactorGraph to construct the
     // Jacobian for this whole factor.
