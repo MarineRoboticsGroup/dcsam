@@ -32,20 +32,25 @@ inline std::vector<double> expNormalize(const std::vector<double> &logProbs) {
    * of the (unnormalized) log probabilities are either very large or very
    * small.
    */
+
+  std::vector<double> cleanLogProbs;
   double maxLogProb = -std::numeric_limits<double>::infinity();
   for (size_t i = 0; i < logProbs.size(); i++) {
-    double logProb = logProbs[i];
+    double logProb = (!std::isnan(logProbs[i]))
+                         ? logProbs[i]
+                         : -std::numeric_limits<double>::infinity();
     if ((logProb != std::numeric_limits<double>::infinity()) &&
         logProb > maxLogProb) {
       maxLogProb = logProb;
     }
+    cleanLogProbs.push_back(logProb);
   }
 
   // After computing the max = "Z" of the log probabilities L_i, we compute
   // the log of the normalizing constant, log S, where S = sum_j exp(L_j - Z).
   double total = 0.0;
-  for (size_t i = 0; i < logProbs.size(); i++) {
-    double probPrime = exp(logProbs[i] - maxLogProb);
+  for (size_t i = 0; i < cleanLogProbs.size(); i++) {
+    double probPrime = exp(cleanLogProbs[i] - maxLogProb);
     total += probPrime;
   }
   double logTotal = log(total);
@@ -54,8 +59,8 @@ inline std::vector<double> expNormalize(const std::vector<double> &logProbs) {
   // p_i = exp(L_i - Z - log S)
   double checkNormalization = 0.0;
   std::vector<double> probs;
-  for (size_t i = 0; i < logProbs.size(); i++) {
-    double prob = exp(logProbs[i] - maxLogProb - logTotal);
+  for (size_t i = 0; i < cleanLogProbs.size(); i++) {
+    double prob = exp(cleanLogProbs[i] - maxLogProb - logTotal);
     probs.push_back(prob);
     checkNormalization += prob;
   }
