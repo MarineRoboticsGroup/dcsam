@@ -21,10 +21,17 @@ namespace dcsam {
 /**
  * @brief Implementation of a discrete-continuous sum-mixture factor
  *
- * r(x) = - log (sum_i w_i * exp ( - r_i(x) ))
+ * r(x) = - log (sum_i w_i * eta_i exp ( - r_i(x) )),
  *
- * We follow the derivation of Rosen et. al 2013 (RISE) and use the
- * numerically-stable "max-sum" model of Pfeiffer et al. 2021.
+ * where eta_i is the normalization constant for the i-th Gaussian component and
+ * w_i is the corresponding weight.
+ *
+ * We follow the derivation of Rosen et. al 2013 (RISE) and use numerically
+ * stable log-sum-exp for sum-mixtures of Gaussians, as in Pfeiffer et al. 2021.
+ *
+ * Requires computation of "beta" an upper-bound on the probability of the
+ * observed data for any assignment to the unknown variables in `keys`. For
+ * sum-mixtures of Gaussians, it suffices to consider beta := sum_i w_i * eta_i.
  */
 template <class DCFactorType>
 class DCSumMixtureFactor : public DCFactor {
@@ -32,6 +39,7 @@ class DCSumMixtureFactor : public DCFactor {
   std::vector<DCFactorType> factors_;
   std::vector<double> log_weights_;
   bool normalized_;
+  double log_beta_;  // A constant upper-bound on p(observed | variables)
 
  public:
   using Base = DCFactor;
@@ -48,6 +56,25 @@ class DCSumMixtureFactor : public DCFactor {
     for (size_t i = 0; i < weights.size(); i++) {
       log_weights_.push_back(log(weights[i]));
     }
+
+    // Compute `beta`. NOTE: DCFactor logNormalizingConstant requires that we
+    // pass continuous values here, even though they are not used.
+    // We simply pass an empty set of Values
+    std::vector<double> logWeightedNormalizingConstants;
+    for (size_t i = 0; i < factors_.size(); i++) {
+      // factors_[i].logNormalizingConstant returns the *negative* log of
+      // the normalizing constant for factors_[i].
+      double logNormalizingConstant =
+          -factors_[i].logNormalizingConstant(gtsam::Values());
+      logWeightedNormalizingConstants.push_back(logNormalizingConstant +
+                                                log_weights_[i]);
+    }
+
+    // Since beta = sum_i (w_i * eta_i), we have:
+    // log beta = log sum_i (w_i * eta_i)
+    //          = log sum_i exp(log (w_i * eta_i))
+    //          = log sum_i exp(log w_i + log eta_i)
+    log_beta_ = logSumExp(logWeightedNormalizingConstants);
   }
 
   explicit DCSumMixtureFactor(const gtsam::KeyVector& continuousKeys,
@@ -64,6 +91,7 @@ class DCSumMixtureFactor : public DCFactor {
   DCSumMixtureFactor& operator=(const DCSumMixtureFactor& rhs) {
     this->factors_ = rhs.factors_;
     this->log_weights_ = rhs.log_weights_;
+    this->log_beta_ = rhs.log_beta_;
     this->normalized_ = rhs.normalized_;
   }
 
@@ -84,6 +112,18 @@ class DCSumMixtureFactor : public DCFactor {
       total_error += componentWeights[i] * (-logprobs[i]);
     }
     return total_error;
+  }
+
+  /**
+   * Compute the square-root residual function defined as:
+   *
+   * sqrt_res := sqrt(log_beta_ - log sum_i w_i * eta_i * exp ( ... ))
+   *
+   * Per Rosen et al. 2013.
+   */
+  double sqrt_residual(const gtsam::Values& continuousVals,
+                       const DiscreteValues& discreteVals) const {
+    return sqrt(log_beta_ - error(continuousVals, discreteVals));
   }
 
   std::vector<double> computeComponentLogProbs(
@@ -135,13 +175,55 @@ class DCSumMixtureFactor : public DCFactor {
     for (size_t i = 0; i < factors_.size(); i++) {
       if (!factors_[i].equals(f.factors_[i])) return false;
     }
-    return ((log_weights_ == f.log_weights_) && (normalized_ == f.normalized_));
+    return ((log_weights_ == f.log_weights_) &&
+            (normalized_ == f.normalized_) &&
+            gtsam::fpEqual(log_beta_, f.log_beta_, tol));
   }
 
   boost::shared_ptr<gtsam::GaussianFactor> linearize(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
     size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
+
+    // Start by computing all errors, so we can get the component weights.
+    std::vector<double> logprobs =
+        computeComponentLogProbs(continuousVals, discreteVals);
+
+    // Weights for each component are obtained by normalizing the errors.
+    std::vector<double> componentWeights = expNormalize(logprobs);
+
+    for (size_t i = 0; i < factors_.size(); i++) {
+      // std::cout << "i = " << i << std::endl;
+      // First get the GaussianFactor obtained by linearizing `factors_[i]`
+      boost::shared_ptr<gtsam::GaussianFactor> gf =
+          factors_[i].linearize(continuousVals, discreteVals);
+
+      gtsam::JacobianFactor jf_component(*gf);
+
+      // Recover the [A b] matrix with Jacobian A and right-hand side vector b,
+      // with noise models "baked in," as a vertical block matrix.
+      // A = Sigma^(1/2)*J
+      gtsam::VerticalBlockMatrix Ab = jf_component.matrixObject();
+
+      gtsam::Vector whitenedError = jf_component.error_vector(
+          continuousVals.localCoordinates(continuousVals));
+
+      // Copy Ab so we can reweight it appropriately.
+      gtsam::VerticalBlockMatrix Ab_weighted = Ab;
+
+      // Populate Ab_weighted with weighted Jacobian sqrt(w)*A and right-hand
+      // side vector sqrt(w)*b.
+      double sqrt_weight = sqrt(componentWeights[i]);
+
+      for (size_t k = 0; k < Ab_weighted.nBlocks(); k++) {
+        Ab_weighted(k) = sqrt_weight * Ab(k);
+      }
+
+      // Create a `JacobianFactor` from the system [A b] and add it to the
+      // `GaussianFactorGraph`.
+      gtsam::JacobianFactor jf(factors_[i].keys(), Ab_weighted);
+      // gfg.add(jf);
+    }
 
     // Get component for "dominant" factor
     boost::shared_ptr<gtsam::GaussianFactor> gf_max =
