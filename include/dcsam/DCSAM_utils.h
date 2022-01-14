@@ -17,6 +17,23 @@
 
 namespace dcsam {
 
+/*
+ * Numerically stable log-sum-exp function.
+ */
+inline double logSumExp(const std::vector<double> &values) {
+  double max = -std::numeric_limits<double>::infinity();
+  for (size_t i = 0; i < values.size(); i++) {
+    if (values[i] > max) {
+      max = values[i];
+    }
+  }
+  double total = 0.0;
+  for (size_t i = 0; i < values.size(); i++) {
+    total += exp(values[i] - max);
+  }
+  return log(total);
+}
+
 inline std::vector<double> expNormalize(const std::vector<double> &logProbs) {
   /*
    * Normalizing a set of log probabilities in a numerically stable way is
