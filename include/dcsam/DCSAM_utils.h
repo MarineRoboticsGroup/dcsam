@@ -31,7 +31,7 @@ inline double logSumExp(const std::vector<double> &values) {
   for (size_t i = 0; i < values.size(); i++) {
     total += exp(values[i] - max);
   }
-  return log(total);
+  return max + log(total);
 }
 
 inline std::vector<double> expNormalize(const std::vector<double> &logProbs) {
