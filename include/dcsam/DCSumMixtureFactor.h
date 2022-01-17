@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <utility>
 #include <vector>
 
 #include "DCFactor.h"
@@ -86,6 +87,25 @@ class DCSumMixtureFactor : public DCFactor {
     for (size_t i = 0; i < factors_.size(); i++) {
       log_weights_.push_back(0);
     }
+
+    // Compute `beta`. NOTE: DCFactor logNormalizingConstant requires that we
+    // pass continuous values here, even though they are not used.
+    // We simply pass an empty set of Values
+    std::vector<double> logWeightedNormalizingConstants;
+    for (size_t i = 0; i < factors_.size(); i++) {
+      // factors_[i].logNormalizingConstant returns the *negative* log of
+      // the normalizing constant for factors_[i].
+      double logNormalizingConstant =
+          -factors_[i].logNormalizingConstant(gtsam::Values());
+      logWeightedNormalizingConstants.push_back(logNormalizingConstant +
+                                                log_weights_[i]);
+    }
+
+    // Since beta = sum_i (w_i * eta_i), we have:
+    // log beta = log sum_i (w_i * eta_i)
+    //          = log sum_i exp(log (w_i * eta_i))
+    //          = log sum_i exp(log w_i + log eta_i)
+    log_beta_ = logSumExp(logWeightedNormalizingConstants);
   }
 
   DCSumMixtureFactor& operator=(const DCSumMixtureFactor& rhs) {
@@ -123,7 +143,7 @@ class DCSumMixtureFactor : public DCFactor {
    */
   double sqrt_residual(const gtsam::Values& continuousVals,
                        const DiscreteValues& discreteVals) const {
-    return sqrt(log_beta_ - error(continuousVals, discreteVals));
+    return sqrt(log_beta_ + error(continuousVals, discreteVals));
   }
 
   std::vector<double> computeComponentLogProbs(
@@ -192,44 +212,48 @@ class DCSumMixtureFactor : public DCFactor {
     // Weights for each component are obtained by normalizing the errors.
     std::vector<double> componentWeights = expNormalize(logprobs);
 
+    double residual_term = sqrt_residual(continuousVals, discreteVals);
+
+    gtsam::GaussianFactorGraph gfg;
+
     for (size_t i = 0; i < factors_.size(); i++) {
-      // std::cout << "i = " << i << std::endl;
       // First get the GaussianFactor obtained by linearizing `factors_[i]`
       boost::shared_ptr<gtsam::GaussianFactor> gf =
           factors_[i].linearize(continuousVals, discreteVals);
 
+      // Converting to a Jacobian factor will give us access to the [A b]
+      // matrices for this linearized factor.
       gtsam::JacobianFactor jf_component(*gf);
 
-      // Recover the [A b] matrix with Jacobian A and right-hand side vector b,
-      // with noise models "baked in," as a vertical block matrix.
-      // A = Sigma^(1/2)*J
-      gtsam::VerticalBlockMatrix Ab = jf_component.matrixObject();
+      // We will *whiten* the Jacobian factor, so that the noise models will be
+      // "baked in" to A and b.
+      gtsam::JacobianFactor jf_whitened = jf_component.whiten();
 
-      gtsam::Vector whitenedError = jf_component.error_vector(
-          continuousVals.localCoordinates(continuousVals));
+      std::vector<std::pair<gtsam::Key, gtsam::Matrix>> terms;
 
-      // Copy Ab so we can reweight it appropriately.
-      gtsam::VerticalBlockMatrix Ab_weighted = Ab;
-
-      // Populate Ab_weighted with weighted Jacobian sqrt(w)*A and right-hand
-      // side vector sqrt(w)*b.
-      double sqrt_weight = sqrt(componentWeights[i]);
-
-      for (size_t k = 0; k < Ab_weighted.nBlocks(); k++) {
-        Ab_weighted(k) = sqrt_weight * Ab(k);
+      for (auto k = jf_whitened.keys().begin(); k != jf_whitened.keys().end();
+           k++) {
+        // From paper appendix.
+        // Here we use the fact that the whitened error for factor "i" is simply
+        // the "b" vector for the whitened version of that factor.
+        gtsam::Matrix factor_A = (1.0 / residual_term) * componentWeights[i] *
+                                 jf_whitened.getb().transpose() *
+                                 jf_whitened.getA(k);
+        std::pair<gtsam::Key, gtsam::Matrix> term(*k, factor_A);
+        terms.push_back(term);
       }
+
+      gtsam::Vector factor_b(1);
+      factor_b(0) = componentWeights[i] * residual_term;
 
       // Create a `JacobianFactor` from the system [A b] and add it to the
       // `GaussianFactorGraph`.
-      gtsam::JacobianFactor jf(factors_[i].keys(), Ab_weighted);
-      // gfg.add(jf);
+      gtsam::JacobianFactor jf(terms, factor_b);
+
+      gfg.add(jf);
     }
 
-    // Get component for "dominant" factor
-    boost::shared_ptr<gtsam::GaussianFactor> gf_max =
-        factors_[min_error_idx].linearize(continuousVals, discreteVals);
-
-    return gf_max;
+    return boost::make_shared<gtsam::JacobianFactor>(gfg);
   }
 
   gtsam::DecisionTreeFactor uniformDecisionTreeFactor(
