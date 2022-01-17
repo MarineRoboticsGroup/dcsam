@@ -236,7 +236,7 @@ class DCSumMixtureFactor : public DCFactor {
         // From paper appendix.
         // Here we use the fact that the whitened error for factor "i" is simply
         // the "b" vector for the whitened version of that factor.
-        gtsam::Matrix factor_A = (1.0 / residual_term) * componentWeights[i] *
+        gtsam::Matrix factor_A = - (0.5 / residual_term) * componentWeights[i] *
                                  jf_whitened.getb().transpose() *
                                  jf_whitened.getA(k);
         std::pair<gtsam::Key, gtsam::Matrix> term(*k, factor_A);
