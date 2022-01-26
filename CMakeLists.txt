@@ -13,7 +13,7 @@ find_package(GTSAM 4.1 REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
 
 # Testing on MacOS
-find_package(TBB 4.4 COMPONENTS tbb tbbmalloc)
+# find_package(TBB 4.4 COMPONENTS tbb tbbmalloc)
 
 # add_definitions(-march=native)
 # add_definitions(-std=c++1z)
@@ -44,7 +44,6 @@ set(DCSAM_SRCS
 set(DCSAM_LIBS
   gtsam
   Eigen3::Eigen
-  tbb
   )
 
 add_library(dcsam STATIC ${DCSAM_SRCS} ${DCSAM_HDRS})
