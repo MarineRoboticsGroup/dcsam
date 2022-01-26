@@ -10,6 +10,7 @@
 
 #include "dcsam/DCContinuousFactor.h"
 #include "dcsam/DCDiscreteFactor.h"
+#include "dcsam/DiscreteMarginalsOrdered.h"
 
 namespace dcsam {
 
@@ -63,7 +64,8 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
   // component
   for (auto &dcfactor : dcfg) {
     DCDiscreteFactor dcDiscreteFactor(dcfactor);
-    auto sharedDiscrete = boost::make_shared<DCDiscreteFactor>(dcDiscreteFactor);
+    auto sharedDiscrete =
+        boost::make_shared<DCDiscreteFactor>(dcDiscreteFactor);
     discreteCombined.push_back(sharedDiscrete);
     dcDiscreteFactors_.push_back(sharedDiscrete);
   }
@@ -76,7 +78,8 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
 
   for (auto &dcfactor : dcfg) {
     DCContinuousFactor dcContinuousFactor(dcfactor);
-    auto sharedContinuous = boost::make_shared<DCContinuousFactor>(dcContinuousFactor);
+    auto sharedContinuous =
+        boost::make_shared<DCContinuousFactor>(dcContinuousFactor);
     sharedContinuous->updateDiscrete(currDiscrete_);
     combined.push_back(sharedContinuous);
     dcContinuousFactors_.push_back(sharedContinuous);
@@ -118,8 +121,8 @@ void DCSAM::updateDiscreteInfo(const gtsam::Values &continuousVals,
   for (auto factor : dcDiscreteFactors_) {
     boost::shared_ptr<DCDiscreteFactor> dcDiscrete =
         boost::static_pointer_cast<DCDiscreteFactor>(factor);
-      dcDiscrete->updateContinuous(continuousVals);
-      dcDiscrete->updateDiscrete(discreteVals);
+    dcDiscrete->updateContinuous(continuousVals);
+    dcDiscrete->updateDiscrete(discreteVals);
   }
 }
 
@@ -135,11 +138,10 @@ void DCSAM::updateContinuousInfo(const DiscreteValues &discreteVals,
   gtsam::FastMap<gtsam::FactorIndex, gtsam::KeySet> newAffectedKeys;
   for (size_t j = 0; j < dcContinuousFactors_.size(); j++) {
     boost::shared_ptr<DCContinuousFactor> dcContinuousFactor =
-      boost::static_pointer_cast<DCContinuousFactor>(dcContinuousFactors_[j]);
+        boost::static_pointer_cast<DCContinuousFactor>(dcContinuousFactors_[j]);
     dcContinuousFactor->updateDiscrete(discreteVals);
     for (const gtsam::Key &k : dcContinuousFactor->keys()) {
       newAffectedKeys[j].insert(k);
-
     }
   }
   updateParams.newAffectedKeys = std::move(newAffectedKeys);
@@ -164,8 +166,7 @@ DCValues DCSAM::calculateEstimate() const {
 DCMarginals DCSAM::getMarginals(const gtsam::NonlinearFactorGraph &graph,
                                 const gtsam::Values &continuousEst,
                                 const gtsam::DiscreteFactorGraph &dfg) {
-  return DCMarginals(gtsam::Marginals(graph, continuousEst),
-                     gtsam::DiscreteMarginals(dfg));
+  return DCMarginals{gtsam::Marginals(graph, continuousEst), dcsam::DiscreteMarginalsOrdered(dfg)};
 }
 
 }  // namespace dcsam

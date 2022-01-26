@@ -1,5 +1,5 @@
 /**
- * @file SemanticMaxMixtureFactor.h
+ * @file DCMaxMixtureFactor.h
  * @brief Discrete-Continuous Max-Mixture factor providing several extra
  * interfaces for weight updates and association retrieval
  * @author Kurran Singh, singhk@mit.edu
@@ -20,7 +20,7 @@
 namespace dcsam {
 
 /**
- * @brief Implementation of a semantic max-mixture factor
+ * @brief Implementation of a discrete-continuous max-mixture factor
  *
  * r(x) = min_i -log(w_i) + r_i(x)
  *
@@ -47,7 +47,7 @@ class DCMaxMixtureFactor : public DCFactor {
                               const bool normalized)
       : Base(continuousKeys, discreteKeys), normalized_(normalized) {
     factors_ = factors;
-    for (int i = 0; i < weights.size(); i++) {
+    for (size_t i = 0; i < weights.size(); i++) {
       log_weights_.push_back(log(weights[i]));
     }
   }
@@ -58,7 +58,7 @@ class DCMaxMixtureFactor : public DCFactor {
                               const bool normalized)
       : Base(continuousKeys, discreteKeys), normalized_(normalized) {
     factors_ = factors;
-    for (int i = 0; i < factors_.size(); i++) {
+    for (size_t i = 0; i < factors_.size(); i++) {
       log_weights_.push_back(0);
     }
   }
@@ -85,7 +85,7 @@ class DCMaxMixtureFactor : public DCFactor {
                             const DiscreteValues& discreteVals) const {
     double min_error = std::numeric_limits<double>::infinity();
     size_t min_error_idx;
-    for (int i = 0; i < factors_.size(); i++) {
+    for (size_t i = 0; i < factors_.size(); i++) {
       double error =
           factors_[i].error(continuousVals, discreteVals) - log_weights_[i];
       if (!normalized_)

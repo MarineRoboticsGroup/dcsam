@@ -6,13 +6,13 @@
  * Copyright 2021 The Ambitious Folks of the MRG
  */
 
+#pragma once
+
 #include <gtsam/discrete/DiscreteFactor.h>
 #include <gtsam/discrete/DiscreteMarginals.h>
 #include <gtsam/nonlinear/Marginals.h>
 
 #include <utility>
-
-#pragma once
 
 namespace dcsam {
 
