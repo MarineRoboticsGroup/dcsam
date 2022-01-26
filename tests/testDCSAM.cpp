@@ -63,6 +63,13 @@ std::vector<T> linspace(T a, T b, size_t N) {
 /*
  * Checking for issues with elimination
  */
+TEST(TestSuite, custom_elimination) {
+
+}
+
+/*
+ * Checking for issues with elimination
+ */
 TEST(TestSuite, mm_factor_elimination) {
   // Some useful symbols.
   gtsam::Symbol xi('x', 1);
