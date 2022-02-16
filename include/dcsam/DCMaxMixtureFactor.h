@@ -1,7 +1,7 @@
 /**
- * @file SemanticMaxMixtureFactor.h
- * @brief Discrete-Continuous Max-Mixture factor providing several extra interfaces for weight
- * updates and association retrieval
+ * @file DCMaxMixtureFactor.h
+ * @brief Discrete-Continuous Max-Mixture factor providing several extra
+ * interfaces for weight updates and association retrieval
  * @author Kurran Singh, singhk@mit.edu
  *
  * Copyright 2021 The Ambitious Folks of the MRG
@@ -9,17 +9,18 @@
 
 #pragma once
 
-#include "DCFactor.h"
-
 #include <math.h>
+
 #include <algorithm>
-#include <vector>
 #include <limits>
+#include <vector>
+
+#include "DCFactor.h"
 
 namespace dcsam {
 
 /**
- * @brief Implementation of a semantic max-mixture factor
+ * @brief Implementation of a discrete-continuous max-mixture factor
  *
  * r(x) = min_i -log(w_i) + r_i(x)
  *
@@ -40,24 +41,24 @@ class DCMaxMixtureFactor : public DCFactor {
   DCMaxMixtureFactor() = default;
 
   explicit DCMaxMixtureFactor(const gtsam::KeyVector& continuousKeys,
-                    const gtsam::DiscreteKeys& discreteKeys,
-                    const std::vector<DCFactorType> factors,
-                            const std::vector<double> weights,
-                            const bool normalized)
-    : Base(continuousKeys, discreteKeys), normalized_(normalized) {
+                              const gtsam::DiscreteKeys& discreteKeys,
+                              const std::vector<DCFactorType> factors,
+                              const std::vector<double> weights,
+                              const bool normalized)
+      : Base(continuousKeys, discreteKeys), normalized_(normalized) {
     factors_ = factors;
-    for (int i = 0; i < weights.size(); i++) {
+    for (size_t i = 0; i < weights.size(); i++) {
       log_weights_.push_back(log(weights[i]));
     }
   }
 
   explicit DCMaxMixtureFactor(const gtsam::KeyVector& continuousKeys,
-                    const gtsam::DiscreteKeys& discreteKeys,
-                    const std::vector<DCFactorType> factors,
-                    const bool normalized)
-    : Base(continuousKeys, discreteKeys), normalized_(normalized) {
+                              const gtsam::DiscreteKeys& discreteKeys,
+                              const std::vector<DCFactorType> factors,
+                              const bool normalized)
+      : Base(continuousKeys, discreteKeys), normalized_(normalized) {
     factors_ = factors;
-    for (int i = 0; i < factors_.size(); i++) {
+    for (size_t i = 0; i < factors_.size(); i++) {
       log_weights_.push_back(0);
     }
   }
@@ -73,20 +74,24 @@ class DCMaxMixtureFactor : public DCFactor {
   double error(const gtsam::Values& continuousVals,
                const DiscreteValues& discreteVals) const override {
     size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
-    double min_error = factors_[min_error_idx].
-                                error(continuousVals, discreteVals);
-    if (normalized_) return min_error;
-    return min_error + factors_[min_error_idx].
-            logNormalizingConstant(continuousVals);
+    double min_error =
+        factors_[min_error_idx].error(continuousVals, discreteVals);
+    if (normalized_) return min_error - log_weights_[min_error_idx];
+    return min_error +
+           factors_[min_error_idx].logNormalizingConstant(continuousVals) -
+           log_weights_[min_error_idx];
   }
 
   size_t getActiveFactorIdx(const gtsam::Values& continuousVals,
-                                 const DiscreteValues& discreteVals) const {
+                            const DiscreteValues& discreteVals) const {
     double min_error = std::numeric_limits<double>::infinity();
     size_t min_error_idx;
-    for (int i = 0; i < factors_.size(); i++) {
-      double error = factors_[i].error(continuousVals, discreteVals)
-                        - log_weights_[i];
+    for (size_t i = 0; i < factors_.size(); i++) {
+      double error =
+          factors_[i].error(continuousVals, discreteVals) - log_weights_[i];
+      if (!normalized_)
+        error += factors_[i].logNormalizingConstant(continuousVals);
+
       if (error < min_error) {
         min_error = error;
         min_error_idx = i;
@@ -110,29 +115,45 @@ class DCMaxMixtureFactor : public DCFactor {
     for (size_t i = 0; i < factors_.size(); i++) {
       if (!factors_[i].equals(f.factors_[i])) return false;
     }
-    return ((log_weights_ == f.log_weights_) &&
-            (normalized_ == f.normalized_));
+    return ((log_weights_ == f.log_weights_) && (normalized_ == f.normalized_));
   }
 
   boost::shared_ptr<gtsam::GaussianFactor> linearize(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
-    double min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
+    size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
     return factors_[min_error_idx].linearize(continuousVals, discreteVals);
+  }
+
+  gtsam::DecisionTreeFactor uniformDecisionTreeFactor(
+      const gtsam::DiscreteKey& dk) const {
+    std::vector<double> probs(dk.second, (1.0 / dk.second));
+    gtsam::DecisionTreeFactor uniform(dk, probs);
+    return uniform;
   }
 
   gtsam::DecisionTreeFactor toDecisionTreeFactor(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
-    double min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
-    return factors_[min_error_idx].toDecisionTreeFactor(continuousVals,
-                                                         discreteVals);
+    size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
+    gtsam::DecisionTreeFactor converted;
+    for (size_t i = 0; i < factors_.size(); i++) {
+      if (i == min_error_idx) {
+        converted = converted * factors_[min_error_idx].toDecisionTreeFactor(
+                                    continuousVals, discreteVals);
+      } else {
+        for (const gtsam::DiscreteKey& dk : factors_[i].discreteKeys()) {
+          converted = converted * uniformDecisionTreeFactor(dk);
+        }
+      }
+    }
+    return converted;
   }
 
   gtsam::FastVector<gtsam::Key> getAssociationKeys(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const {
-    double min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
+    size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
     return factors_[min_error_idx].keys();
   }
 

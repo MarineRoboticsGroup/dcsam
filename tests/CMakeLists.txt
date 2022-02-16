@@ -1,7 +1,8 @@
 option(ENABLE_PLOTTING "Enable plotting (requires matplotlibcpp)" OFF)
 
 if (ENABLE_PLOTTING)
-find_package(matplotlibcpp REQUIRED)
+  message(STATUS "Plotting enabled. Building tests with plotting.")
+  find_package(matplotlibcpp REQUIRED)
 endif()
 
 # The gtest/gtest_main targets carry header search path

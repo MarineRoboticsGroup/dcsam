@@ -29,6 +29,7 @@
 // Our custom DCSAM includes
 #include "dcsam/DCContinuousFactor.h"
 #include "dcsam/DCDiscreteFactor.h"
+#include "dcsam/DCEMFactor.h"
 #include "dcsam/DCMaxMixtureFactor.h"
 #include "dcsam/DCMixtureFactor.h"
 #include "dcsam/DCSAM.h"
@@ -1268,12 +1269,11 @@ TEST(TestSuite, dcMaxMixture_semantic_slam) {
 
     // build mixture: dcmaxmixture should be picking the component for lm1
     SemanticBearingRangeFactor<gtsam::Pose2, gtsam::Point2> sbr1(
-                xi, l1, lm1_class, semantic_meas, bearing1, range1, br_noise);
+        xi, l1, lm1_class, semantic_meas, bearing1, range1, br_noise);
     SemanticBearingRangeFactor<gtsam::Pose2, gtsam::Point2> sbr2(
-                xi, l2, lm2_class, semantic_meas, bearing1, range1, br_noise);
-    DCMaxMixtureFactor<SemanticBearingRangeFactor<gtsam::Pose2,
-                                                  gtsam::Point2>> dcmmf(
-                            {xi, l1, l2}, dks, {sbr1, sbr2}, {.5, .5}, false);
+        xi, l2, lm2_class, semantic_meas, bearing1, range1, br_noise);
+    DCMaxMixtureFactor<SemanticBearingRangeFactor<gtsam::Pose2, gtsam::Point2>>
+        dcmmf({xi, l1, l2}, dks, {sbr1, sbr2}, {.5, .5}, false);
 
     hfg.push_dc(dcmmf);
     odom = odom * meas;
@@ -1464,15 +1464,15 @@ TEST(TestSuite, factor_removal) {
   gtsam::FactorIndices discreteRemovals{3,5,7};
 
   // make sure continuous removal works as well 
-  gtsam::FactorIndices removals{7};
+  gtsam::FactorIndices removals{5};
 
   // TODO(Kurran) why does removing continous factor 5 cause isam segfault?
-  // dcsam.getNonlinearFactorGraph().at(5)->print();
+  dcsam.getNonlinearFactorGraph().at(5)->print();
 
   dcsam.update(hfg, initialGuess, initialGuessDiscrete, removals, discreteRemovals);
 
-  EXPECT_EQ(dcsam.getDiscreteFactorGraph().at(7), nullptr);
-  EXPECT_EQ(dcsam.getNonlinearFactorGraph().at(7), nullptr);
+  EXPECT_EQ(dcsam.getDiscreteFactorGraph().at(5), nullptr);
+  EXPECT_EQ(dcsam.getNonlinearFactorGraph().at(5), nullptr);
 
   dcvals = dcsam.calculateEstimate();
 

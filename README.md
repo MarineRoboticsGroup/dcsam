@@ -1,5 +1,7 @@
 # dcsam
 
+[![Build Status](http://mrg-beast.csail.mit.edu:8080/buildStatus/icon?job=dcsam%2Fmain)](http://mrg-beast.csail.mit.edu:8080/job/dcsam/job/main/)
+
 This library, built using GTSAM, provides factor type definitions and a new solver to perform approximate inference on discrete-continuous (hybrid) factor graph models typically encountered in robotics applications.
 
 **NOTE: This library is currently under active development by the Marine Robotics Group at MIT. As such, the API is subject to potential breaking changes at any point.**
@@ -35,7 +37,7 @@ To run unit tests, first build with testing enabled:
 ```bash
 ~/$ mkdir build
 ~/$ cd build
-~/build$ cmake .. -DENABLE_TESTS
+~/build$ cmake .. -DENABLE_TESTS=ON
 ~/build$ make -j
 ```
 

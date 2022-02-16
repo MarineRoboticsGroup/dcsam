@@ -15,9 +15,11 @@
 
 #include <algorithm>
 #include <limits>
+#include <string>
 #include <vector>
 
-#include "DCSAM_types.h"
+#include "dcsam/DCSAM_types.h"
+#include "dcsam/DCSAM_utils.h"
 
 namespace dcsam {
 
@@ -167,22 +169,25 @@ class DCFactor : public gtsam::Factor {
 
   /**
    * Calculate a normalizing constant for this DCFactor. Most implementations
-   * will be able to use the helper function nonlinearFactorLogNormalizingConstant
-   * provided below for most of the calculation.
+   * will be able to use the helper function
+   * nonlinearFactorLogNormalizingConstant provided below for most of the
+   * calculation.
    * TODO(Kurran) is this the cleanest way to do this? Seems necessary for the
    * DCMaxMixtureFactor implementations etc...
    */
   virtual double logNormalizingConstant(const gtsam::Values& values) const {
-    throw std::logic_error("Normalizing constant not implemented."
-      "One or more of the factors in use requires access to the normalization"
-      "constant for a child class of DCFactor, but`logNormalizingConstant` "
-      "has not been overridden.");
+    throw std::logic_error(
+        "Normalizing constant not implemented."
+        "One or more of the factors in use requires access to the normalization"
+        "constant for a child class of DCFactor, but`logNormalizingConstant` "
+        "has not been overridden.");
   }
 
   /**
-   * Default for computing the _negative_ normalizing constant for the measurement
-   * likelihood (since we are minimizing the _negative_ log-likelihood), to be used
-   * as a utility for computing the DCFactorLogNormalizingConstant.
+   * Default for computing the _negative_ normalizing constant for the
+   * measurement likelihood (since we are minimizing the _negative_
+   * log-likelihood), to be used as a utility for computing the
+   * DCFactorLogNormalizingConstant.
    */
   template <typename NonlinearFactorType>
   double nonlinearFactorLogNormalizingConstant(
@@ -222,7 +227,7 @@ class DCFactor : public gtsam::Factor {
     }
 
     // Compute the (negative) log of the normalizing constant
-    return -(factor.dim() * log(2.0 * M_PI) / 2.0) -
+    return (factor.dim() * log(2.0 * M_PI) / 2.0) -
            (log(infoMat.determinant()) / 2.0);
   }
 
@@ -248,25 +253,31 @@ class DCFactor : public gtsam::Factor {
    */
   std::vector<double> evalProbs(const gtsam::DiscreteKey& dk,
                                 const gtsam::Values& continuousVals) const {
-    double total = 0.0;
-    std::vector<double> probs;
+    /*
+     * Normalizing a set of log probabilities in a numerically stable way is
+     * tricky. To avoid overflow/underflow issues, we compute the largest
+     * (finite) log probability and subtract it from each log probability before
+     * normalizing. This comes from the observation that if:
+     *    p_i = exp(L_i) / ( sum_j exp(L_j) ),
+     * Then,
+     *    p_i = exp(Z) exp(L_i - Z) / (exp(Z) sum_j exp(L_j - Z)),
+     *        = exp(L_i - Z) / ( sum_j exp(L_j - Z) )
+     *
+     * Setting Z = max_j L_j, we can avoid numerical issues that arise when all
+     * of the (unnormalized) log probabilities are either very large or very
+     * small.
+     */
+    std::vector<double> logProbs;
+    double maxLogProb = -std::numeric_limits<double>::infinity();
     for (size_t i = 0; i < dk.second; i++) {
       DiscreteValues testDiscreteVals;
       testDiscreteVals[dk.first] = i;
-      // Compute _unnormalized_ probability of discrete value = i
       // Recall: `error` returns -log(prob), so we compute exp(-error) to
       // recover probability
-      double probPrime = exp(-error(continuousVals, testDiscreteVals));
-      probs.push_back(probPrime);
-      total += probPrime;
+      double logProb = -error(continuousVals, testDiscreteVals);
+      logProbs.push_back(logProb);
     }
-
-    // Normalize the result
-    for (size_t i = 0; i < dk.second; i++) {
-      probs[i] = probs[i] / total;
-    }
-
-    return probs;
+    return expNormalize(logProbs);
   }
 
   /**
