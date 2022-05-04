@@ -19,11 +19,25 @@ endif()
 # Include tests here...
 add_executable(testDCSAM testDCSAM.cpp)
 
+if (APPLE)
+  set(GTEST_LIBS
+    /usr/local/lib/libgtest.a
+    /usr/local/lib/libgtest_main.a
+  )
+else()
+  set(GTEST_LIBS
+    gtest
+    gtest_main
+)
+endif()
+
+
+
 # If plotting is enabled, we need to link to matplotlibcpp
 if (ENABLE_PLOTTING)
-  target_link_libraries(testDCSAM dcsam gtest gtest_main matplotlibcpp)
+  target_link_libraries(testDCSAM dcsam matplotlibcpp gtsam ${GTEST_LIBS})
 else()
-  target_link_libraries(testDCSAM dcsam /usr/local/lib/libgtest.a /usr/local/lib/libgtest_main.a gtsam)
+  target_link_libraries(testDCSAM dcsam gtsam ${GTEST_LIBS})
 endif()
 
 add_test(TestDCSAM testDCSAM)
