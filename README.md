@@ -12,7 +12,7 @@ We will soon be making available a technical report describing this library and 
 
 ## Prerequisites
 
-- [GTSAM 4.1](https://github.com/borglab/gtsam)
+- [GTSAM 4.1] @ 737dcf6 (https://github.com/borglab/gtsam)
 
 ### Optional
 

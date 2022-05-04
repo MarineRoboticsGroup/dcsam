@@ -74,7 +74,12 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
   updateDiscrete(discreteCombined, currContinuous_, currDiscrete_);
 
   // Update current discrete state estimate.
-  currDiscrete_ = solveDiscrete();
+  if (!initialGuessContinuous.empty() && initialGuessDiscrete.empty() &&
+      discreteCombined.empty()) {
+    // This is an odometry?
+  } else {
+    currDiscrete_ = solveDiscrete();
+  }
 
   for (auto &dcfactor : dcfg) {
     DCContinuousFactor dcContinuousFactor(dcfactor);

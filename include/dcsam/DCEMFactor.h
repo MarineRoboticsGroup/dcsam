@@ -200,7 +200,6 @@ class DCEMFactor : public DCFactor {
     return boost::make_shared<gtsam::JacobianFactor>(gfg);
   }
 
-  // TODO(kevin): make this a proper EM factor for the discrete part.
   gtsam::DecisionTreeFactor toDecisionTreeFactor(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {

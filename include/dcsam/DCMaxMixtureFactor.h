@@ -76,9 +76,10 @@ class DCMaxMixtureFactor : public DCFactor {
     size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
     double min_error =
         factors_[min_error_idx].error(continuousVals, discreteVals);
-    if (normalized_) return min_error;
+    if (normalized_) return min_error - log_weights_[min_error_idx];
     return min_error +
-           factors_[min_error_idx].logNormalizingConstant(continuousVals);
+           factors_[min_error_idx].logNormalizingConstant(continuousVals) -
+           log_weights_[min_error_idx];
   }
 
   size_t getActiveFactorIdx(const gtsam::Values& continuousVals,
@@ -124,12 +125,29 @@ class DCMaxMixtureFactor : public DCFactor {
     return factors_[min_error_idx].linearize(continuousVals, discreteVals);
   }
 
+  gtsam::DecisionTreeFactor uniformDecisionTreeFactor(
+      const gtsam::DiscreteKey& dk) const {
+    std::vector<double> probs(dk.second, (1.0 / dk.second));
+    gtsam::DecisionTreeFactor uniform(dk, probs);
+    return uniform;
+  }
+
   gtsam::DecisionTreeFactor toDecisionTreeFactor(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
     size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
-    return factors_[min_error_idx].toDecisionTreeFactor(continuousVals,
-                                                        discreteVals);
+    gtsam::DecisionTreeFactor converted;
+    for (size_t i = 0; i < factors_.size(); i++) {
+      if (i == min_error_idx) {
+        converted = converted * factors_[min_error_idx].toDecisionTreeFactor(
+                                    continuousVals, discreteVals);
+      } else {
+        for (const gtsam::DiscreteKey& dk : factors_[i].discreteKeys()) {
+          converted = converted * uniformDecisionTreeFactor(dk);
+        }
+      }
+    }
+    return converted;
   }
 
   gtsam::FastVector<gtsam::Key> getAssociationKeys(
