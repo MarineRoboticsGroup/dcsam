@@ -69,32 +69,6 @@ class DiscreteMarginalsOrdered : public gtsam::DiscreteMarginals {
 
     return std::make_pair(cond, sum);
   }
-
-  static std::pair<gtsam::DiscreteConditional::shared_ptr,
-                   gtsam::DecisionTreeFactor::shared_ptr>
-  CustomEliminateDiscrete(const gtsam::DiscreteFactorGraph &factors,
-                          const gtsam::Ordering &frontalKeys) {
-    // PRODUCT: multiply all factors
-    gtsam::DecisionTreeFactor product;
-    for (const gtsam::DiscreteFactor::shared_ptr &factor : factors) {
-      product = (*factor) * product;
-    }
-
-    // sum out frontals to get the factor on the separator
-    gtsam::DecisionTreeFactor::shared_ptr sum = product.sum(frontalKeys);
-
-    // Ordering keys for the conditional so that frontal keys is in front
-    gtsam::Ordering orderedKeys;
-    orderedKeys.insert(orderedKeys.end(), frontalKeys.begin(),
-                       frontalKeys.end());
-    orderedKeys.insert(orderedKeys.end(), sum->keys().begin(),
-                       sum->keys().end());
-
-    gtsam::DiscreteConditional::shared_ptr cond(
-        new gtsam::DiscreteConditional(product, *sum, orderedKeys));
-
-    return std::make_pair(cond, sum);
-  }
 };
 
 }  // namespace dcsam
