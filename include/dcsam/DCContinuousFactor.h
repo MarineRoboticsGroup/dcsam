@@ -74,12 +74,18 @@ class DCContinuousFactor : public gtsam::NonlinearFactor {
 
   ~DCContinuousFactor() = default;
 
-  void updateDiscrete(const DiscreteValues& discreteVals) {
+  bool updateDiscrete(const DiscreteValues& discreteVals) {
+    bool updated = false;
     for (const gtsam::DiscreteKey& dk : discreteKeys_) {
       const gtsam::Key k = dk.first;
-      if (discreteVals.find(k) != discreteVals.end())
-        discreteVals_[k] = discreteVals.at(k);
+      if (discreteVals.find(k) != discreteVals.end()) {
+        if (discreteVals.at(k) != discreteVals_[k]) {
+          discreteVals_[k] = discreteVals.at(k);
+          updated = true;
+        }
+      }
     }
+    return updated;
   }
 
   size_t dim() const override { return dcfactor_->dim(); }
