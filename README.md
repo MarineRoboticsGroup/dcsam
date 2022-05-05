@@ -10,6 +10,16 @@ This library, built using GTSAM, provides factor type definitions and a new solv
 
 We will soon be making available a technical report describing this library and our solver and providing documentation. For now, if you found this code useful, let us know!
 
+A technical report describing this library and our solver can be found [here](https://arxiv.org/abs/2204.11936). If you found this code useful, please cite it as:
+```bibtex
+@article{doherty2022discrete,
+  title={Discrete-Continuous Smoothing and Mapping},
+  author={Doherty, Kevin J and Lu, Ziqi and Singh, Kurran and Leonard, John J},
+  journal={arXiv preprint arXiv:2204.11936},
+  year={2022}
+}
+```
+
 ## Prerequisites
 
 - [GTSAM](https://github.com/borglab/gtsam) @ caa14bc 
@@ -64,8 +74,3 @@ To get started using `pre-commit` with this codebase, from the project repo run:
 pre-commit install
 ```
 Now, each time you `git add` new files and try to `git commit` your code will automatically be run through a variety of linters. You won't be able to commit anything until the linters are happy with your code.
-
-For modules in the `thirdparty` directory, we will not do any linting. If you are adding code in a `thirdparty` directory, you should commit with:
-```
-git commit --no-verify -m "My commit message here...."
-```
