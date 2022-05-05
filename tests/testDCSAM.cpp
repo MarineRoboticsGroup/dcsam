@@ -84,10 +84,10 @@ TEST(TestSuite, discrete_prior_factor) {
   dfg.push_back(dpf);
 
   // Solve
-  gtsam::DiscreteFactor::sharedValues mostProbableEstimate = dfg.optimize();
+  dcsam::DiscreteValues mostProbableEstimate = dfg.optimize();
 
   // Get the most probable estimate
-  size_t mpeD = (*mostProbableEstimate).at(dk.first);
+  size_t mpeD = mostProbableEstimate.at(dk.first);
 
   // Get the marginals
   gtsam::DiscreteMarginals discreteMarginals(dfg);
@@ -131,10 +131,10 @@ TEST(TestSuite, smart_discrete_prior_factor) {
   dfg.push_back(dpf);
 
   // Solve
-  gtsam::DiscreteFactor::sharedValues mostProbableEstimate = dfg.optimize();
+  dcsam::DiscreteValues mostProbableEstimate = dfg.optimize();
 
   // Get the most probable estimate
-  size_t mpeD = (*mostProbableEstimate).at(dk.first);
+  size_t mpeD = mostProbableEstimate.at(dk.first);
 
   // EXPECT MPE = 1 (exactly the same as above test)
   EXPECT_EQ(mpeD, 1);
@@ -153,7 +153,7 @@ TEST(TestSuite, smart_discrete_prior_factor) {
   mostProbableEstimate = dfg.optimize();
 
   // Get the most probable estimate
-  mpeD = (*mostProbableEstimate).at(dk.first);
+  mpeD = mostProbableEstimate.at(dk.first);
 
   // Get the new marginals
   gtsam::DiscreteMarginals newDiscreteMarginals(dfg);
@@ -230,7 +230,7 @@ TEST(TestSuite, dcdiscrete_mixture) {
 
   // Pack DCMixture into a DCDiscreteFactor
   for (auto& it : dcfg) {
-    DCDiscreteFactor dcDiscrete(it->discreteKeys()[0], it);
+    DCDiscreteFactor dcDiscrete(it->discreteKeys(), it);
     dfg.push_back(dcDiscrete);
   }
 
@@ -245,10 +245,10 @@ TEST(TestSuite, dcdiscrete_mixture) {
   }
 
   // Solve for discrete given continuous
-  gtsam::DiscreteFactor::sharedValues mostProbableEstimate = dfg.optimize();
+  dcsam::DiscreteValues mostProbableEstimate = dfg.optimize();
 
   // Get the most probable estimate
-  size_t mpeD = (*mostProbableEstimate).at(dk.first);
+  size_t mpeD = mostProbableEstimate.at(dk.first);
 
   // Get the marginals
   gtsam::DiscreteMarginals newDiscreteMarginals(dfg);
@@ -373,10 +373,10 @@ TEST(TestSuite, dccontinuous_mixture) {
   }
 
   // Solve for discrete given continuous
-  gtsam::DiscreteFactor::sharedValues mostProbableEstimate = dfg.optimize();
+  dcsam::DiscreteValues mostProbableEstimate = dfg.optimize();
 
   // Get the most probable estimate
-  size_t mpeD = (*mostProbableEstimate).at(dk.first);
+  size_t mpeD = mostProbableEstimate.at(dk.first);
 
   // From previous test we know this is == 1
   EXPECT_EQ(mpeD, 1);
@@ -390,7 +390,7 @@ TEST(TestSuite, dccontinuous_mixture) {
     boost::shared_ptr<DCContinuousFactor> dcContinuousFactor =
         boost::dynamic_pointer_cast<DCContinuousFactor>(graph[j]);
     if (dcContinuousFactor)
-      dcContinuousFactor->updateDiscrete((*mostProbableEstimate));
+      dcContinuousFactor->updateDiscrete(mostProbableEstimate);
   }
 
   // Setup isam
@@ -426,7 +426,7 @@ TEST(TestSuite, dccontinuous_mixture) {
 
   // Re-solve discrete to verify that output has switched
   mostProbableEstimate = dfg.optimize();
-  mpeD = (*mostProbableEstimate).at(dk.first);
+  mpeD = mostProbableEstimate.at(dk.first);
 
   // Ensure that the prediction is correct
   EXPECT_EQ(mpeD, 0);

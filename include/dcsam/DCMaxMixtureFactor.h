@@ -108,7 +108,7 @@ class DCMaxMixtureFactor : public DCFactor {
     }
   }
 
-  bool equals(const DCFactor& other, double tol = 1e-9) const {
+  bool equals(const DCFactor& other, double tol = 1e-9) const override {
     if (!dynamic_cast<const DCMaxMixtureFactor*>(&other)) return false;
     const DCMaxMixtureFactor& f(static_cast<const DCMaxMixtureFactor&>(other));
     if (factors_.size() != f.factors_.size()) return false;

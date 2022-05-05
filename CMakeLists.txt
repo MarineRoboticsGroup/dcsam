@@ -13,6 +13,7 @@ find_package(GTSAM 4.1 REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
 
 # add_definitions(-march=native)
+# add_definitions(-std=c++1z)
 
 set(DCSAM_HDRS
   include/dcsam/DCSAM_types.h
