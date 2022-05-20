@@ -1,0 +1,18 @@
+digraph "include/dcsam/DCFactorGraph.h"
+{
+ // LATEX_PDF_SIZE
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node1 [label="include/dcsam/DCFactorGraph.h",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black",tooltip="Simple class for factor graphs of DCFactor type."];
+  Node1 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 [label="include/dcsam/DCSAM.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$_d_c_s_a_m_8h.html",tooltip="Discrete-Continuous Smoothing and Mapping for Factored Models."];
+  Node2 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node3 [label="src/DCSAM.cpp",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$_d_c_s_a_m_8cpp.html",tooltip="Discrete-Continuous Smoothing and Mapping for Factored Models."];
+  Node2 -> Node4 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node4 [label="tests/testDCSAM.cpp",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$test_d_c_s_a_m_8cpp.html",tooltip="Unit tests for DCSAM."];
+  Node1 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node5 [label="include/dcsam/HybridFactor\lGraph.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$_hybrid_factor_graph_8h.html",tooltip="Custom hybrid factor graph for discrete + continuous factors."];
+  Node5 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node5 -> Node6 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node6 [label="src/HybridFactorGraph.cpp",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$_hybrid_factor_graph_8cpp.html",tooltip="Custom hybrid factor graph for discrete + continuous factors."];
+}
