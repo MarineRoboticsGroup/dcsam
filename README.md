@@ -13,7 +13,7 @@ We will soon be making available a technical report describing this library and 
 A technical report describing this library and our solver can be found [here](https://arxiv.org/abs/2204.11936). If you found this code useful, please cite it as:
 ```bibtex
 @article{doherty2022discrete,
-  title={Discrete-Continuous Smoothing and Mapping},
+  title={Discrete-{C}ontinuous {S}moothing and {M}apping},
   author={Doherty, Kevin J and Lu, Ziqi and Singh, Kurran and Leonard, John J},
   journal={arXiv preprint arXiv:2204.11936},
   year={2022}
