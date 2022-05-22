@@ -8,8 +8,6 @@ This library, built using GTSAM, provides factor type definitions and a new solv
 
 ### References
 
-We will soon be making available a technical report describing this library and our solver and providing documentation. For now, if you found this code useful, let us know!
-
 A technical report describing this library and our solver can be found [here](https://arxiv.org/abs/2204.11936). If you found this code useful, please cite it as:
 ```bibtex
 @article{doherty2022discrete,
