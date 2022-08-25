@@ -18,7 +18,16 @@ A technical report describing this library and our solver can be found [here](ht
 
 ## Prerequisites
 
-- [GTSAM](https://github.com/borglab/gtsam) @ caa14bc 
+- [GTSAM](https://github.com/borglab/gtsam) @ `caa14bc`
+
+To retrieve the appropriate version of GTSAM:
+```sh
+~/$ git clone https://github.com/borglab/gtsam
+~/$ cd gtsam
+~/gtsam/$ git checkout caa14bc
+```
+Follow instructions in the GTSAM repository to build and install with your desired configuration.
+
 
 ### Optional
 
@@ -31,10 +40,10 @@ A technical report describing this library and our solver can be found [here](ht
 To build using `cmake`:
 
 ```bash
-~/$ mkdir build
-~/$ cd build
-~/build$ cmake ..
-~/build$ make -j
+~/dcsam/$ mkdir build
+~/dcsam/$ cd build
+~/dcsam/build$ cmake ..
+~/dcsam/build$ make -j
 ```
 
 ### Run tests
