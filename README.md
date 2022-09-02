@@ -64,7 +64,7 @@ Now you can run the tests as follows:
 
 ### Examples
 
-For example usage, for now the best resource is to take a look through `testDCSAM.cpp`.
+For example usage, check out [the DC-SAM examples repo](https://github.com/MarineRoboticsGroup/dcsam-examples) or take a look through `testDCSAM.cpp`.
 
 ## Developing
 
