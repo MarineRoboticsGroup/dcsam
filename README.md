@@ -9,10 +9,14 @@ This library, built using GTSAM, provides factor type definitions and a new solv
 A technical report describing this library and our solver can be found [here](https://arxiv.org/abs/2204.11936). If you found this code useful, please cite it as:
 ```bibtex
 @article{doherty2022discrete,
-  title={Discrete-{C}ontinuous {S}moothing and {M}apping},
-  author={Doherty, Kevin J and Lu, Ziqi and Singh, Kurran and Leonard, John J},
-  journal={arXiv preprint arXiv:2204.11936},
-  year={2022}
+  author={Doherty, Kevin J. and Lu, Ziqi and Singh, Kurran and Leonard, John J.},
+  journal={IEEE Robotics and Automation Letters}, 
+  title={Discrete-Continuous Smoothing and Mapping}, 
+  year={2022},
+  volume={7},
+  number={4},
+  pages={12395-12402},
+  doi={10.1109/LRA.2022.3216938}
 }
 ```
 
