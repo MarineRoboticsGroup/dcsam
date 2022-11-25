@@ -11,7 +11,7 @@ A technical report describing this library and our solver can be found [here](ht
 @article{doherty2022discrete,
   author={Doherty, Kevin J. and Lu, Ziqi and Singh, Kurran and Leonard, John J.},
   journal={IEEE Robotics and Automation Letters}, 
-  title={Discrete-Continuous Smoothing and Mapping}, 
+  title={Discrete-{C}ontinuous {S}moothing and {M}apping}, 
   year={2022},
   volume={7},
   number={4},
