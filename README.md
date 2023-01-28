@@ -10,8 +10,8 @@ A technical report describing this library and our solver can be found [here](ht
 ```bibtex
 @article{doherty2022discrete,
   author={Doherty, Kevin J. and Lu, Ziqi and Singh, Kurran and Leonard, John J.},
-  journal={IEEE Robotics and Automation Letters}, 
-  title={Discrete-{C}ontinuous {S}moothing and {M}apping}, 
+  journal={IEEE Robotics and Automation Letters},
+  title={Discrete-{C}ontinuous {S}moothing and {M}apping},
   year={2022},
   volume={7},
   number={4},
@@ -22,13 +22,13 @@ A technical report describing this library and our solver can be found [here](ht
 
 ## Prerequisites
 
-- [GTSAM](https://github.com/borglab/gtsam) @ `caa14bc`
+- [GTSAM](https://github.com/borglab/gtsam) @ `4.2a8`
 
 To retrieve the appropriate version of GTSAM:
 ```sh
 ~/$ git clone https://github.com/borglab/gtsam
 ~/$ cd gtsam
-~/gtsam/$ git checkout caa14bc
+~/gtsam/$ git checkout 4.2a8
 ```
 Follow instructions in the GTSAM repository to build and install with your desired configuration.
 
