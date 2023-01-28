@@ -26,9 +26,9 @@ A technical report describing this library and our solver can be found [here](ht
 
 To retrieve the appropriate version of GTSAM:
 ```sh
-~/$ git clone https://github.com/borglab/gtsam
-~/$ cd gtsam
-~/gtsam/$ git checkout 4.2a8
+~ $ git clone https://github.com/borglab/gtsam
+~ $ cd gtsam
+~/gtsam $ git checkout 4.2a8
 ```
 Follow instructions in the GTSAM repository to build and install with your desired configuration.
 
@@ -44,26 +44,26 @@ Follow instructions in the GTSAM repository to build and install with your desir
 To build using `cmake`:
 
 ```bash
-~/dcsam/$ mkdir build
-~/dcsam/$ cd build
-~/dcsam/build$ cmake ..
-~/dcsam/build$ make -j
+~/dcsam $ mkdir build
+~/dcsam $ cd build
+~/dcsam/build $ cmake ..
+~/dcsam/build $ make -j
 ```
 
 ### Run tests
 
 To run unit tests, first build with testing enabled:
 ```bash
-~/$ mkdir build
-~/$ cd build
-~/build$ cmake .. -DENABLE_TESTS=ON
-~/build$ make -j
+~/dcsam $ mkdir build
+~/dcsam $ cd build
+~/dcsam/build $ cmake .. -DENABLE_TESTS=ON
+~/dcsam/build $ make -j
 ```
 
 Now you can run the tests as follows:
 
 ```bash
-~/build$ make test
+~/dcsam/build $ make test
 ```
 
 ### Examples
