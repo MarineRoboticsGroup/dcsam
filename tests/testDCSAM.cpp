@@ -341,8 +341,8 @@ TEST(TestSuite, dccontinuous_mixture) {
   std::vector<double> initError1{dcMixture.error(initialGuess, dv1)};
   std::vector<double> initErrorNH{dcMixture.error(initialGuess, dvNH)};
 
-  plt::scatter(initVec, initError1, {{"color", "r"}});
-  plt::scatter(initVec, initErrorNH, {{"color", "r"}});
+  plt::scatter(initVec, initError1, 1, {{"color", "r"}});
+  plt::scatter(initVec, initErrorNH, 1, {{"color", "r"}});
 #endif
 
   // We also need an initial guess for the discrete variables (this will only be
@@ -410,8 +410,8 @@ TEST(TestSuite, dccontinuous_mixture) {
   std::vector<double> updatedError1{dcMixture.error(values, dv1)};
   std::vector<double> updatedErrorNH{dcMixture.error(values, dvNH)};
 
-  plt::scatter(updatedVec, updatedError1, {{"color", "b"}});
-  plt::scatter(updatedVec, updatedErrorNH, {{"color", "b"}});
+  plt::scatter(updatedVec, updatedError1, 1, {{"color", "b"}});
+  plt::scatter(updatedVec, updatedErrorNH, 1, {{"color", "b"}});
   plt::show();
 #endif
 
@@ -507,8 +507,8 @@ TEST(TestSuite, simple_mixture_factor) {
   std::vector<double> initError1{dcMixture.error(initialGuess, dv1)};
   std::vector<double> initErrorNH{dcMixture.error(initialGuess, dvNH)};
 
-  plt::scatter(initVec, initError1, {{"color", "r"}});
-  plt::scatter(initVec, initErrorNH, {{"color", "r"}});
+  plt::scatter(initVec, initError1, 1, {{"color", "r"}});
+  plt::scatter(initVec, initErrorNH, 1, {{"color", "r"}});
 #endif
 
   // We also need an initial guess for the discrete variables (this will only be
@@ -537,8 +537,8 @@ TEST(TestSuite, simple_mixture_factor) {
   std::vector<double> updatedError1{dcMixture.error(dcvals.continuous, dv1)};
   std::vector<double> updatedErrorNH{dcMixture.error(dcvals.continuous, dvNH)};
 
-  plt::scatter(updatedVec, updatedError1, {{"color", "b"}});
-  plt::scatter(updatedVec, updatedErrorNH, {{"color", "b"}});
+  plt::scatter(updatedVec, updatedError1, 1, {{"color", "b"}});
+  plt::scatter(updatedVec, updatedErrorNH, 1, {{"color", "b"}});
   plt::show();
 #endif
 
@@ -850,7 +850,7 @@ TEST(TestSuite, simple_semantic_slam) {
     string color = (mpeClassL1 == 0) ? "b" : "orange";
 
     plt::plot(xs, ys);
-    plt::scatter(lmxs, lmys, {{"color", color}});
+    plt::scatter(lmxs, lmys, 1, {{"color", color}});
     plt::show();
 #endif
 
@@ -885,7 +885,7 @@ TEST(TestSuite, simple_semantic_slam) {
   string color = (mpeClassL1 == 0) ? "b" : "orange";
 
   plt::plot(xs, ys);
-  plt::scatter(lmxs, lmys, {{"color", color}});
+  plt::scatter(lmxs, lmys, 1, {{"color", color}});
   plt::show();
 #endif
 
@@ -1114,7 +1114,7 @@ TEST(TestSuite, bearing_range_semantic_slam) {
     string color = (mpeClassL1 == 0) ? "b" : "orange";
 
     plt::plot(xs, ys);
-    plt::scatter(lmxs, lmys, {{"color", color}});
+    plt::scatter(lmxs, lmys, 1, {{"color", color}});
     plt::show();
 #endif
 
@@ -1149,7 +1149,7 @@ TEST(TestSuite, bearing_range_semantic_slam) {
   string color = (mpeClassL1 == 0) ? "b" : "orange";
 
   plt::plot(xs, ys);
-  plt::scatter(lmxs, lmys, {{"color", color}});
+  plt::scatter(lmxs, lmys, 1, {{"color", color}});
   plt::show();
 #endif
 
@@ -1302,7 +1302,7 @@ TEST(TestSuite, dcMaxMixture_semantic_slam) {
     string color = (mpeClassL1 == 0) ? "b" : "orange";
 
     plt::plot(xs, ys);
-    plt::scatter(lmxs, lmys, {{"color", color}});
+    plt::scatter(lmxs, lmys, 1, {{"color", color}});
     plt::show();
 #endif
 
@@ -1337,7 +1337,7 @@ TEST(TestSuite, dcMaxMixture_semantic_slam) {
   string color = (mpeClassL1 == 0) ? "b" : "orange";
 
   plt::plot(xs, ys);
-  plt::scatter(lmxs, lmys, {{"color", color}});
+  plt::scatter(lmxs, lmys, 1, {{"color", color}});
   plt::show();
 #endif
 
@@ -1485,7 +1485,7 @@ TEST(TestSuite, simple_dcemfactor) {
     string color = (mpeClassL1 == 0) ? "b" : "orange";
 
     plt::plot(xs, ys);
-    plt::scatter(lmxs, lmys, {{"color", color}});
+    plt::scatter(lmxs, lmys, 1, {{"color", color}});
     plt::show();
 #endif
 
@@ -1520,7 +1520,7 @@ TEST(TestSuite, simple_dcemfactor) {
   string color = (mpeClassL1 == 0) ? "b" : "orange";
 
   plt::plot(xs, ys);
-  plt::scatter(lmxs, lmys, {{"color", color}});
+  plt::scatter(lmxs, lmys, 1, {{"color", color}});
   plt::show();
 #endif
 

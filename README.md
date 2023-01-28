@@ -56,7 +56,7 @@ To run unit tests, first build with testing enabled:
 ```bash
 ~/dcsam $ mkdir build
 ~/dcsam $ cd build
-~/dcsam/build $ cmake .. -DENABLE_TESTS=ON
+~/dcsam/build $ cmake .. -DDCSAM_ENABLE_TESTS=ON
 ~/dcsam/build $ make -j
 ```
 
