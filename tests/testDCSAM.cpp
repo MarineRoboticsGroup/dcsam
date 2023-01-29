@@ -309,6 +309,20 @@ TEST(TestSuite, dccontinuous_mixture) {
   std::cout << "DK 1st: " << dkTest.first << std::endl;
   std::cout << "DK 2nd: " << dkTest.second << std::endl;
 
+  // Test calculation of negative log probability
+  dcsam::DiscreteValues dv1, dvNH;
+  dv1[dk.first] = 0;
+  dvNH[dk.first] = 1;
+  gtsam::Values xvals;
+  xvals.insert(x1, 0.0);
+  const double negLogProb_1 = dcMixture.error(xvals, dv1);
+  const double negLogProb_NH = dcMixture.error(xvals, dvNH);
+  xvals.clear();
+
+  // As calculated in MATLAB using -log(normpdf(0,0,1)), -log(normpdf(0,0,8))
+  EXPECT_NEAR(negLogProb_1, 0.9189, 1e-3);
+  EXPECT_NEAR(negLogProb_NH, 2.9984, 1e-3);
+
 // Plot the cost functions for each hypothesis
 #ifdef ENABLE_PLOTTING
   // Query cost function
