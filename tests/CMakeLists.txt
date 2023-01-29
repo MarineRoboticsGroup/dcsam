@@ -26,16 +26,31 @@ target_link_libraries(testDCSAM dcsam gtsam ${GTEST_LIBS})
 if(DCSAM_ENABLE_PLOTTING)
   message(STATUS "Plotting enabled. Building tests with plotting.")
   include(FetchContent)
-  FetchContent_Declare(matplotlib_cpp
+  FetchContent_Declare(matplotlibcpp
     GIT_REPOSITORY https://github.com/lava/matplotlib-cpp.git
     GIT_TAG ef0383f1315d32e0156335e10b82e90b334f6d9f
   )
-  FetchContent_MakeAvailable(matplotlib_cpp)
+
+  FetchContent_GetProperties(matplotlibcpp)
+  if(NOT matplotlibcpp_POPULATED)
+    FetchContent_Populate(matplotlibcpp)
+
+    find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+    find_package(Python3 COMPONENTS NumPy)
+
+    add_library(matplotlibcpp INTERFACE)
+    target_include_directories(matplotlibcpp INTERFACE ${matplotlibcpp_SOURCE_DIR})
+    target_compile_features(matplotlibcpp INTERFACE cxx_std_11)
+    target_link_libraries(matplotlibcpp INTERFACE Python3::Python Python3::Module)
+    if(Python3_NumPy_FOUND)
+      target_link_libraries(matplotlibcpp INTERFACE Python3::NumPy)
+    else()
+      target_compile_definitions(matplotlibcpp INTERFACE WITHOUT_NUMPY)
+    endif()
+  endif()
 
   target_compile_definitions(testDCSAM PRIVATE ENABLE_PLOTTING=1)
-  target_link_libraries(testDCSAM matplotlib_cpp)
-  # workaround until: https://github.com/lava/matplotlib-cpp/pull/335
-  target_include_directories(testDCSAM PRIVATE ${matplotlib_cpp_SOURCE_DIR})
+  target_link_libraries(testDCSAM matplotlibcpp)
 endif()
 
 add_test(TestDCSAM testDCSAM)
