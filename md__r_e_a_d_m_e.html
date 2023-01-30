@@ -92,8 +92,8 @@ $(document).ready(function(){initNavTree('md__r_e_a_d_m_e.html',''); initResizab
 References</h2>
 <p>A technical report describing this library and our solver can be found <a href="https://arxiv.org/abs/2204.11936">here</a>. If you found this code useful, please cite it as: </p><div class="fragment"><div class="line">@article{doherty2022discrete,</div>
 <div class="line">  author={Doherty, Kevin J. and Lu, Ziqi and Singh, Kurran and Leonard, John J.},</div>
-<div class="line">  journal={IEEE Robotics and Automation Letters}, </div>
-<div class="line">  title={Discrete-{C}ontinuous {S}moothing and {M}apping}, </div>
+<div class="line">  journal={IEEE Robotics and Automation Letters},</div>
+<div class="line">  title={Discrete-{C}ontinuous {S}moothing and {M}apping},</div>
 <div class="line">  year={2022},</div>
 <div class="line">  volume={7},</div>
 <div class="line">  number={4},</div>
@@ -103,11 +103,11 @@ References</h2>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md2"></a>
 Prerequisites</h1>
 <ul>
-<li><a href="https://github.com/borglab/gtsam">GTSAM</a> @ <code>caa14bc</code></li>
+<li><a href="https://github.com/borglab/gtsam">GTSAM</a> @ <code>4.2a8</code></li>
 </ul>
-<p>To retrieve the appropriate version of GTSAM: </p><div class="fragment"><div class="line">~/$ git clone https://github.com/borglab/gtsam</div>
-<div class="line">~/$ cd gtsam</div>
-<div class="line">~/gtsam/$ git checkout caa14bc</div>
+<p>To retrieve the appropriate version of GTSAM: </p><div class="fragment"><div class="line">~ $ git clone https://github.com/borglab/gtsam</div>
+<div class="line">~ $ cd gtsam</div>
+<div class="line">~/gtsam $ git checkout 4.2a8</div>
 </div><!-- fragment --><p> Follow instructions in the GTSAM repository to build and install with your desired configuration.</p>
 <h2><a class="anchor" id="autotoc_md3"></a>
 Optional</h2>
@@ -119,18 +119,18 @@ Building</h1>
 <h2><a class="anchor" id="autotoc_md5"></a>
 Building the project</h2>
 <p>To build using <code>cmake</code>:</p>
-<div class="fragment"><div class="line">~/dcsam/$ mkdir build</div>
-<div class="line">~/dcsam/$ cd build</div>
-<div class="line">~/dcsam/build$ cmake ..</div>
-<div class="line">~/dcsam/build$ make -j</div>
+<div class="fragment"><div class="line">~/dcsam $ mkdir build</div>
+<div class="line">~/dcsam $ cd build</div>
+<div class="line">~/dcsam/build $ cmake ..</div>
+<div class="line">~/dcsam/build $ make -j</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md6"></a>
 Run tests</h2>
-<p>To run unit tests, first build with testing enabled: </p><div class="fragment"><div class="line">~/$ mkdir build</div>
-<div class="line">~/$ cd build</div>
-<div class="line">~/build$ cmake .. -DENABLE_TESTS=ON</div>
-<div class="line">~/build$ make -j</div>
+<p>To run unit tests, first build with testing enabled: </p><div class="fragment"><div class="line">~/dcsam $ mkdir build</div>
+<div class="line">~/dcsam $ cd build</div>
+<div class="line">~/dcsam/build $ cmake .. -DDCSAM_ENABLE_TESTS=ON</div>
+<div class="line">~/dcsam/build $ make -j</div>
 </div><!-- fragment --><p>Now you can run the tests as follows:</p>
-<div class="fragment"><div class="line">~/build$ make test</div>
+<div class="fragment"><div class="line">~/dcsam/build $ make test</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md7"></a>
 Examples</h2>
 <p>For example usage, check out <a href="https://github.com/MarineRoboticsGroup/dcsam-examples">the DC-SAM examples repo</a> or take a look through <code><a class="el" href="test_d_c_s_a_m_8cpp.html" title="Unit tests for DCSAM.">testDCSAM.cpp</a></code>.</p>

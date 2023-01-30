@@ -23,7 +23,7 @@ digraph "tests/testDCSAM.cpp"
   Node1 -> Node10 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node10 [label="gtsam/nonlinear/Symbol.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
   Node1 -> Node11 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node11 [label="gtsam/slam/BearingRangeFactor.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
+  Node11 [label="gtsam/sam/BearingRangeFactor.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
   Node1 -> Node12 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node12 [label="gtsam/slam/BetweenFactor.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
   Node1 -> Node13 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
@@ -156,7 +156,7 @@ digraph "tests/testDCSAM.cpp"
   Node45 -> Node16 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node45 -> Node22 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node1 -> Node46 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node46 [label="dcsam/SemanticBearingRange\lFactor.h",height=0.2,width=0.4,color="red", fillcolor="white", style="filled",URL="$_semantic_bearing_range_factor_8h.html",tooltip="Bearing-range factor that incorporates semantic classes."];
+  Node46 [label="dcsam/SemanticBearingRange\lFactor.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$_semantic_bearing_range_factor_8h.html",tooltip="Bearing-range factor that incorporates semantic classes."];
   Node46 -> Node47 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node47 [label="gtsam/geometry/BearingRange.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
   Node46 -> Node48 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
@@ -168,15 +168,16 @@ digraph "tests/testDCSAM.cpp"
   Node50 [label="gtsam/geometry/Pose3.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
   Node46 -> Node17 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node46 -> Node10 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node46 -> Node51 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node51 [label="gtsam/sam/BearingRangeFactor.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
+  Node46 -> Node11 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node46 -> Node18 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node46 -> Node19 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node46 -> Node20 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node46 -> Node51 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node51 [label="type_traits",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
   Node46 -> Node22 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node46 -> Node23 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node1 -> Node53 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node53 [label="dcsam/SmartDiscretePrior\lFactor.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$_smart_discrete_prior_factor_8h.html",tooltip="Updateable prior factor."];
-  Node53 -> Node22 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node53 -> Node45 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node1 -> Node52 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node52 [label="dcsam/SmartDiscretePrior\lFactor.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$_smart_discrete_prior_factor_8h.html",tooltip="Updateable prior factor."];
+  Node52 -> Node22 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node52 -> Node45 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
 }
