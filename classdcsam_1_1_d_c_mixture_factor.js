@@ -8,6 +8,5 @@ var classdcsam_1_1_d_c_mixture_factor =
     [ "equals", "classdcsam_1_1_d_c_mixture_factor.html#adf41e0ef495bad0f9a0888ec77e57726", null ],
     [ "error", "classdcsam_1_1_d_c_mixture_factor.html#a694bf498b2933490bf6377522ee1bfe4", null ],
     [ "linearize", "classdcsam_1_1_d_c_mixture_factor.html#a17e2a6c1994cdd211f7fd3d9b9d73cce", null ],
-    [ "nonlinearFactorLogNormalizingConstant", "classdcsam_1_1_d_c_mixture_factor.html#a9b81c9780c5d4ec79bb897ef3c27004b", null ],
     [ "operator=", "classdcsam_1_1_d_c_mixture_factor.html#a632a6c9cd67c99bd6bc07404e80ea5b5", null ]
 ];

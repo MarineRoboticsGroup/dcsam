@@ -3,16 +3,16 @@ var hierarchy =
     [ "dcsam::DCMarginals", "structdcsam_1_1_d_c_marginals.html", null ],
     [ "dcsam::DCSAM", "classdcsam_1_1_d_c_s_a_m.html", null ],
     [ "dcsam::DCValues", "structdcsam_1_1_d_c_values.html", null ],
-    [ "DiscreteFactor", null, [
+    [ "gtsam::DiscreteFactor", null, [
       [ "dcsam::DCDiscreteFactor", "classdcsam_1_1_d_c_discrete_factor.html", null ],
       [ "dcsam::DiscretePriorFactor", "classdcsam_1_1_discrete_prior_factor.html", [
         [ "dcsam::SmartDiscretePriorFactor", "classdcsam_1_1_smart_discrete_prior_factor.html", null ]
       ] ]
     ] ],
-    [ "DiscreteMarginals", null, [
+    [ "gtsam::DiscreteMarginals", null, [
       [ "dcsam::DiscreteMarginalsOrdered", "classdcsam_1_1_discrete_marginals_ordered.html", null ]
     ] ],
-    [ "Factor", null, [
+    [ "gtsam::Factor", null, [
       [ "dcsam::DCFactor", "classdcsam_1_1_d_c_factor.html", [
         [ "dcsam::DCEMFactor< DCFactorType >", "classdcsam_1_1_d_c_e_m_factor.html", null ],
         [ "dcsam::DCMaxMixtureFactor< DCFactorType >", "classdcsam_1_1_d_c_max_mixture_factor.html", null ],
@@ -22,11 +22,11 @@ var hierarchy =
         ] ]
       ] ]
     ] ],
-    [ "FactorGraph", null, [
+    [ "gtsam::FactorGraph", null, [
       [ "dcsam::DCFactorGraph", "classdcsam_1_1_d_c_factor_graph.html", null ]
     ] ],
     [ "dcsam::HybridFactorGraph", "classdcsam_1_1_hybrid_factor_graph.html", null ],
-    [ "NonlinearFactor", null, [
+    [ "gtsam::NonlinearFactor", null, [
       [ "dcsam::DCContinuousFactor", "classdcsam_1_1_d_c_continuous_factor.html", null ]
     ] ]
 ];

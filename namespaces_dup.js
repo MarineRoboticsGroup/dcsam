@@ -1,4 +1,4 @@
 var namespaces_dup =
 [
-    [ "dcsam", "namespacedcsam.html", null ]
+    [ "dcsam", "namespacedcsam.html", "namespacedcsam" ]
 ];

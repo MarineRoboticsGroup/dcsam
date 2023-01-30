@@ -7,5 +7,5 @@ digraph "dcsam::SmartDiscretePriorFactor"
   Node2 -> Node1 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node2 [label="dcsam::DiscretePriorFactor",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$classdcsam_1_1_discrete_prior_factor.html",tooltip="Implementation of a discrete prior factor."];
   Node3 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
-  Node3 [label="DiscreteFactor",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
+  Node3 [label="gtsam::DiscreteFactor",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
 }
