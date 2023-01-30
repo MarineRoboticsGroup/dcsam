@@ -9,7 +9,7 @@ repos:
     -   id: check-yaml
     -   id: check-added-large-files
         args: ['--maxkb=3000']
--   repo: https://gitlab.com/pycqa/flake8
+-   repo: https://github.com/pycqa/flake8
     rev: 3.8.2
     hooks:
     -   id: flake8
