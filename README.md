@@ -4,6 +4,8 @@
 
 This library, built using GTSAM, provides factor type definitions and a new solver to perform approximate inference on discrete-continuous (hybrid) factor graph models typically encountered in robotics applications.
 
+**NOTE: As of 1/30/2023 the latest version of DC-SAM on `main` depends on GTSAM release 4.2a8.** If you are using GTSAM 4.1.1, check out our [pre-4.2 release tag](https://github.com/MarineRoboticsGroup/dcsam/releases/tag/pre-4.2). This is the version of DC-SAM you would have used if you cloned the repository prior to 1/30/2023. Many thanks to [Parker Lusk](https://github.com/plusk01) for bringing us into the future.
+
 ### References
 
 A technical report describing this library and our solver can be found [here](https://arxiv.org/abs/2204.11936). If you found this code useful, please cite it as:
