@@ -4,23 +4,36 @@
 
 This library, built using GTSAM, provides factor type definitions and a new solver to perform approximate inference on discrete-continuous (hybrid) factor graph models typically encountered in robotics applications.
 
-**NOTE: This library is currently under active development by the Marine Robotics Group at MIT. As such, the API is subject to potential breaking changes at any point.**
+**NOTE: As of 1/30/2023 the latest version of DC-SAM on `main` depends on GTSAM release 4.2a8.** If you are using GTSAM 4.1.1, check out our [pre-4.2 release tag](https://github.com/MarineRoboticsGroup/dcsam/releases/tag/pre-4.2). This is the version of DC-SAM you would have used if you cloned the repository prior to 1/30/2023. Many thanks to [Parker Lusk](https://github.com/plusk01) for bringing us into the future.
 
 ### References
 
 A technical report describing this library and our solver can be found [here](https://arxiv.org/abs/2204.11936). If you found this code useful, please cite it as:
 ```bibtex
 @article{doherty2022discrete,
+  author={Doherty, Kevin J. and Lu, Ziqi and Singh, Kurran and Leonard, John J.},
+  journal={IEEE Robotics and Automation Letters},
   title={Discrete-{C}ontinuous {S}moothing and {M}apping},
-  author={Doherty, Kevin J and Lu, Ziqi and Singh, Kurran and Leonard, John J},
-  journal={arXiv preprint arXiv:2204.11936},
-  year={2022}
+  year={2022},
+  volume={7},
+  number={4},
+  pages={12395-12402},
+  doi={10.1109/LRA.2022.3216938}
 }
 ```
 
 ## Prerequisites
 
-- [GTSAM](https://github.com/borglab/gtsam) @ caa14bc 
+- [GTSAM](https://github.com/borglab/gtsam) @ `4.2a8`
+
+To retrieve the appropriate version of GTSAM:
+```sh
+~ $ git clone https://github.com/borglab/gtsam
+~ $ cd gtsam
+~/gtsam $ git checkout 4.2a8
+```
+Follow instructions in the GTSAM repository to build and install with your desired configuration.
+
 
 ### Optional
 
@@ -33,31 +46,31 @@ A technical report describing this library and our solver can be found [here](ht
 To build using `cmake`:
 
 ```bash
-~/$ mkdir build
-~/$ cd build
-~/build$ cmake ..
-~/build$ make -j
+~/dcsam $ mkdir build
+~/dcsam $ cd build
+~/dcsam/build $ cmake ..
+~/dcsam/build $ make -j
 ```
 
 ### Run tests
 
 To run unit tests, first build with testing enabled:
 ```bash
-~/$ mkdir build
-~/$ cd build
-~/build$ cmake .. -DENABLE_TESTS=ON
-~/build$ make -j
+~/dcsam $ mkdir build
+~/dcsam $ cd build
+~/dcsam/build $ cmake .. -DDCSAM_ENABLE_TESTS=ON
+~/dcsam/build $ make -j
 ```
 
 Now you can run the tests as follows:
 
 ```bash
-~/build$ make test
+~/dcsam/build $ make test
 ```
 
 ### Examples
 
-For example usage, for now the best resource is to take a look through `testDCSAM.cpp`.
+For example usage, check out [the DC-SAM examples repo](https://github.com/MarineRoboticsGroup/dcsam-examples) or take a look through `testDCSAM.cpp`.
 
 ## Developing
 

@@ -112,54 +112,6 @@ class DCMixtureFactor : public DCFactor {
     // error.
     return factors_[assignment].linearize(continuousVals);
   }
-
-  /**
-   * If the component factors are not already normalized, we want to compute
-   * their normalizing constants so that the resulting joint distribution is
-   * appropriately computed. Remember, this is the _negative_ normalizing
-   * constant for the measurement likelihood (since we are minimizing the
-   * _negative_ log-likelihood).
-   */
-  double nonlinearFactorLogNormalizingConstant(
-      const NonlinearFactorType& factor, const gtsam::Values& values) const {
-    // Information matrix (inverse covariance matrix) for the factor.
-    gtsam::Matrix infoMat;
-
-    // NOTE: This is sloppy, is there a cleaner way?
-    boost::shared_ptr<NonlinearFactorType> fPtr =
-        boost::make_shared<NonlinearFactorType>(factor);
-    boost::shared_ptr<gtsam::NonlinearFactor> factorPtr(fPtr);
-
-    // If this is a NoiseModelFactor, we'll use its noiseModel to
-    // otherwise noiseModelFactor will be nullptr
-    boost::shared_ptr<gtsam::NoiseModelFactor> noiseModelFactor =
-        boost::dynamic_pointer_cast<gtsam::NoiseModelFactor>(factorPtr);
-    if (noiseModelFactor) {
-      // If dynamic cast to NoiseModelFactor succeeded, see if the noise model
-      // is Gaussian
-      gtsam::noiseModel::Base::shared_ptr noiseModel =
-          noiseModelFactor->noiseModel();
-
-      boost::shared_ptr<gtsam::noiseModel::Gaussian> gaussianNoiseModel =
-          boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(noiseModel);
-      if (gaussianNoiseModel) {
-        // If the noise model is Gaussian, retrieve the information matrix
-        infoMat = gaussianNoiseModel->information();
-      } else {
-        // If the factor is not a Gaussian factor, we'll linearize it to get
-        // something with a normalized noise model
-        // TODO(kevin): does this make sense to do? I think maybe not in
-        // general? Should we just yell at the user?
-        boost::shared_ptr<gtsam::GaussianFactor> gaussianFactor =
-            factor.linearize(values);
-        infoMat = gaussianFactor->information();
-      }
-    }
-
-    // Compute the (negative) log of the normalizing constant
-    return -(factor.dim() * log(2.0 * M_PI) / 2.0) -
-           (log(infoMat.determinant()) / 2.0);
-  }
 };
 
 }  // namespace dcsam
