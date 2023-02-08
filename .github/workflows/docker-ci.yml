@@ -20,7 +20,7 @@ jobs:
       run: docker build . --file Dockerfile --tag local
 
     - name: Build code
-      run: docker run -v $PWD:/work -w/work local /bin/bash -c "mkdir build && cd build && cmake -DENABLE_TESTS=ON .. && make -j8"
+      run: docker run -v $PWD:/work -w/work local /bin/bash -c "mkdir build && cd build && cmake -DDCSAM_ENABLE_TESTS=ON .. && make -j8"
 
     - name: Run tests
       run: docker run -v $PWD:/work -w/work local /bin/bash -c "cd build && make test"
