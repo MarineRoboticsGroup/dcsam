@@ -1,6 +1,7 @@
 # dcsam
 
-[![Build Status](http://mrg-beast.csail.mit.edu:8080/buildStatus/icon?job=dcsam%2Fmain)](http://mrg-beast.csail.mit.edu:8080/job/dcsam/job/main/) [![docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://marinerobotics.mit.edu/dcsam)
+![Build Status](https://github.com/MarineRoboticsGroup/dcsam/actions/workflows/docker-ci.yml/badge.svg)
+[![docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://marinerobotics.mit.edu/dcsam)
 
 This library, built using GTSAM, provides factor type definitions and a new solver to perform approximate inference on discrete-continuous (hybrid) factor graph models typically encountered in robotics applications.
 
