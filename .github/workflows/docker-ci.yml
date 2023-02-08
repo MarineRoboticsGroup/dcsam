@@ -1,0 +1,26 @@
+name: Docker Image CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build Docker image
+      run: docker build . --file Dockerfile --tag local
+
+    - name: Build code
+      run: docker run -v $PWD:/work -w/work local /bin/bash -c "mkdir build && cd build && cmake -DDCSAM_ENABLE_TESTS=ON .. && make -j8"
+
+    - name: Run tests
+      run: docker run -v $PWD:/work -w/work local /bin/bash -c "cd build && make test"
