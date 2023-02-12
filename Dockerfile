@@ -25,7 +25,7 @@ RUN apt-get -y update && apt-get -y install libboost-all-dev libtbb-dev
 # Build and install GTSAM
 RUN git clone https://github.com/borglab/gtsam.git && \
   cd gtsam && \
-  git checkout caa14bc && \
+  git checkout 4.2a8 && \
   cd .. && \
 	mkdir gtsam/build && cd gtsam/build && \
   cmake .. && make -j8 install
