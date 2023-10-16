@@ -74,6 +74,8 @@ class DCMaxMixtureFactor : public DCFactor {
   double error(const gtsam::Values& continuousVals,
                const DiscreteValues& discreteVals) const override {
     size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);
+    assert(0 <= min_error_idx);
+    assert(min_error_idx < factors_.size());
     double min_error =
         factors_[min_error_idx].error(continuousVals, discreteVals);
     if (normalized_) return min_error - log_weights_[min_error_idx];
@@ -85,7 +87,7 @@ class DCMaxMixtureFactor : public DCFactor {
   size_t getActiveFactorIdx(const gtsam::Values& continuousVals,
                             const DiscreteValues& discreteVals) const {
     double min_error = std::numeric_limits<double>::infinity();
-    size_t min_error_idx;
+    size_t min_error_idx = 0;
     for (size_t i = 0; i < factors_.size(); i++) {
       double error =
           factors_[i].error(continuousVals, discreteVals) - log_weights_[i];
@@ -108,7 +110,7 @@ class DCMaxMixtureFactor : public DCFactor {
     }
   }
 
-  bool equals(const DCFactor& other, double tol = 1e-9) const {
+  bool equals(const DCFactor& other, double tol = 1e-9) const override {
     if (!dynamic_cast<const DCMaxMixtureFactor*>(&other)) return false;
     const DCMaxMixtureFactor& f(static_cast<const DCMaxMixtureFactor&>(other));
     if (factors_.size() != f.factors_.size()) return false;

@@ -48,7 +48,7 @@ class DiscretePriorFactor : public gtsam::DiscreteFactor {
     keys_.push_back(dk.first);
   }
 
-  bool equals(const DiscreteFactor& other, double tol = 1e-9) const {
+  bool equals(const DiscreteFactor& other, double tol = 1e-9) const override {
     if (!dynamic_cast<const DiscretePriorFactor*>(&other)) return false;
     const DiscretePriorFactor& f(
         static_cast<const DiscretePriorFactor&>(other));
@@ -68,17 +68,17 @@ class DiscretePriorFactor : public gtsam::DiscreteFactor {
     return *this;
   }
 
-  gtsam::DecisionTreeFactor toDecisionTreeFactor() const {
+  gtsam::DecisionTreeFactor toDecisionTreeFactor() const override {
     gtsam::DecisionTreeFactor converted(dk_, probs_);
     return converted;
   }
 
   gtsam::DecisionTreeFactor operator*(
-      const gtsam::DecisionTreeFactor& f) const {
+      const gtsam::DecisionTreeFactor& f) const override {
     return toDecisionTreeFactor() * f;
   }
 
-  double operator()(const DiscreteValues& values) const {
+  double operator()(const DiscreteValues& values) const override {
     size_t assignment = values.at(dk_.first);
     return probs_[assignment];
   }
@@ -92,7 +92,6 @@ class DiscretePriorFactor : public gtsam::DiscreteFactor {
                    const Names& names) const override {
     return toDecisionTreeFactor().markdown(keyFormatter, names);
   }
-
 };
 
 }  // namespace dcsam

@@ -82,7 +82,7 @@ class DCDiscreteFactor : public gtsam::DiscreteFactor {
 
   virtual ~DCDiscreteFactor() = default;
 
-  bool equals(const DiscreteFactor& other, double tol = 1e-9) const {
+  bool equals(const DiscreteFactor& other, double tol = 1e-9) const override {
     if (!dynamic_cast<const DCDiscreteFactor*>(&other)) return false;
     const DCDiscreteFactor& f(static_cast<const DCDiscreteFactor&>(other));
     return (dcfactor_->equals(*f.dcfactor_) &&
@@ -91,18 +91,18 @@ class DCDiscreteFactor : public gtsam::DiscreteFactor {
             discreteVals_ == f.discreteVals_);
   }
 
-  gtsam::DecisionTreeFactor toDecisionTreeFactor() const {
+  gtsam::DecisionTreeFactor toDecisionTreeFactor() const override {
     assert(allInitialized());
     return dcfactor_->toDecisionTreeFactor(continuousVals_, discreteVals_);
   }
 
   gtsam::DecisionTreeFactor operator*(
-      const gtsam::DecisionTreeFactor& f) const {
+      const gtsam::DecisionTreeFactor& f) const override {
     assert(allInitialized());
     return dcfactor_->conditionalTimes(f, continuousVals_, discreteVals_);
   }
 
-  double operator()(const DiscreteValues& values) const {
+  double operator()(const DiscreteValues& values) const override {
     assert(allInitialized());
     return exp(-dcfactor_->error(continuousVals_, values));
   }
@@ -151,7 +151,6 @@ class DCDiscreteFactor : public gtsam::DiscreteFactor {
                    const Names& names) const override {
     return toDecisionTreeFactor().markdown(keyFormatter, names);
   }
-  
 };
 
 }  // namespace dcsam
