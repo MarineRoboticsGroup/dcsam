@@ -137,7 +137,7 @@ class DCEMFactor : public DCFactor {
     return total;
   }
 
-  bool equals(const DCFactor& other, double tol = 1e-9) const {
+  bool equals(const DCFactor& other, double tol = 1e-9) const override {
     if (!dynamic_cast<const DCEMFactor*>(&other)) return false;
     const DCEMFactor& f(static_cast<const DCEMFactor&>(other));
     if (factors_.size() != f.factors_.size()) return false;

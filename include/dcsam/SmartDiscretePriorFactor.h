@@ -34,6 +34,16 @@ class SmartDiscretePriorFactor : public DiscretePriorFactor {
     assert(probs.size() == probs_.size());
     probs_ = probs;
   }
+
+  std::string markdown(const gtsam::KeyFormatter& keyFormatter,
+                       const Names& names) const override {
+    return toDecisionTreeFactor().markdown(keyFormatter, names);
+  }
+
+  std::string html(const gtsam::KeyFormatter& keyFormatter,
+                   const Names& names) const override {
+    return toDecisionTreeFactor().markdown(keyFormatter, names);
+  }
 };
 
 }  // namespace dcsam
