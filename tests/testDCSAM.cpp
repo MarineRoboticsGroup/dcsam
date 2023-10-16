@@ -1553,6 +1553,144 @@ TEST(TestSuite, simple_dcemfactor) {
   EXPECT_EQ(mpeClassL1, 1);
 }
 
+/**
+ * This is for testing the behavior of factor removal
+ */
+TEST(TestSuite, factor_removal) {
+   // Make a factor graph
+  dcsam::HybridFactorGraph hfg;
+
+  // Values for initial guess
+  gtsam::Values initialGuess;
+  dcsam::DiscreteValues initialGuessDiscrete;
+
+  gtsam::Symbol x0('x', 0);
+  gtsam::Symbol l1('l', 1);
+  gtsam::Symbol lc1('c', 1);
+  // Create a discrete key for landmark 1 class with cardinality 2.
+  gtsam::DiscreteKey lm1_class(lc1, 2);
+  gtsam::Pose2 pose0(0, 0, 0);
+  gtsam::Pose2 dx(1, 0, 0.78539816);
+  double prior_sigma = 0.1;
+  double meas_sigma = 1.0;
+  double circumradius = (std::sqrt(4 + 2 * std::sqrt(2))) / 2.0;
+  gtsam::Point2 landmark1(circumradius, circumradius);
+
+  gtsam::noiseModel::Isotropic::shared_ptr prior_noise =
+      gtsam::noiseModel::Isotropic::Sigma(3, prior_sigma);
+  gtsam::noiseModel::Isotropic::shared_ptr prior_lm_noise =
+      gtsam::noiseModel::Isotropic::Sigma(2, prior_sigma);
+  gtsam::noiseModel::Isotropic::shared_ptr meas_noise =
+      gtsam::noiseModel::Isotropic::Sigma(3, meas_sigma);
+
+  // 0.1 rad std on bearing, 10cm on range
+  gtsam::noiseModel::Isotropic::shared_ptr br_noise =
+      gtsam::noiseModel::Isotropic::Sigma(2, 0.1);
+
+  std::vector<double> prior_lm1_class;
+  prior_lm1_class.push_back(0.9);
+  prior_lm1_class.push_back(0.1);
+
+  gtsam::PriorFactor<gtsam::Pose2> p0(x0, pose0, prior_noise);
+  gtsam::PriorFactor<gtsam::Point2> pl1(l1, landmark1, prior_lm_noise);
+  dcsam::DiscretePriorFactor plc1(lm1_class, prior_lm1_class);
+
+  initialGuess.insert(x0, pose0);
+  initialGuess.insert(l1, landmark1);
+  initialGuessDiscrete[lm1_class.first] = 1;
+
+  hfg.push_nonlinear(p0);
+  hfg.push_nonlinear(pl1);
+  hfg.push_discrete(plc1);
+
+  // Setup dcsam
+  dcsam::DCSAM dcsam;
+  dcsam.update(hfg, initialGuess, initialGuessDiscrete);
+
+  dcsam::DCValues dcval_start = dcsam.calculateEstimate();
+  std::cout << "Printing first values" << std::endl;
+  dcval_start.discrete.print();
+
+  hfg.clear();
+  initialGuess.clear();
+  initialGuessDiscrete.clear();
+
+  gtsam::Pose2 odom(pose0);
+  gtsam::Pose2 noise(0.01, 0.01, 0.01);
+  for (size_t i = 0; i < 3; i++) {
+    gtsam::Symbol xi('x', i);
+    gtsam::Symbol xj('x', i + 1);
+
+    gtsam::Pose2 meas = dx * noise;
+
+    gtsam::BetweenFactor<gtsam::Pose2> bw(xi, xj, meas, meas_noise);
+    hfg.push_nonlinear(bw);
+
+    // Add semantic bearing-range measurement to landmark in center
+    gtsam::Rot2 bearing1 = gtsam::Rot2::fromDegrees(67.5);
+    double range1 = circumradius;
+
+    // For the first measurement, pick class=0, later pick class=1
+    std::vector<double> semantic_meas;
+    if (i < 1) {
+      semantic_meas.push_back(0.9);
+      semantic_meas.push_back(0.1);
+    } else {
+      semantic_meas.push_back(0.1);
+      semantic_meas.push_back(0.9);
+    }
+
+    gtsam::DiscreteKeys dks({lm1_class});
+
+    dcsam::SemanticBearingRangeFactor<gtsam::Pose2, gtsam::Point2> sbr1(
+                xi, l1, lm1_class, semantic_meas, bearing1, range1, br_noise);
+
+    hfg.push_dc(sbr1);
+    odom = odom * meas;
+    initialGuess.insert(xj, odom);
+    dcsam.update(hfg, initialGuess);
+    dcsam::DCValues dcvals = dcsam.calculateEstimate();
+
+    hfg.clear();
+    initialGuess.clear();
+  }
+  
+  dcsam::DCValues dcvals = dcsam.calculateEstimate();
+  size_t mpeClassL1 = dcvals.discrete.at(lc1);
+  EXPECT_EQ(mpeClassL1, 1);
+
+  std::cout << "now let's remove factors! " << std::endl;
+
+  // Now let's start removing factors and see what happens. 
+  EXPECT_EQ(dcsam.getDiscreteFactorGraph().size(), 8);
+  EXPECT_EQ(dcsam.getNonlinearFactorGraph().size(), 8);
+
+  hfg.clear();
+  initialGuess.clear();
+  initialGuessDiscrete.clear();
+
+  // removing all discrete factors with high class 1 prob 
+  gtsam::FactorIndices discreteRemovals{3,5,7};
+
+  // make sure continuous removal works as well 
+  gtsam::FactorIndices removals{5};
+
+  // TODO(Kurran) why does removing continous factor 5 cause isam segfault?
+  dcsam.getNonlinearFactorGraph().at(5)->print();
+
+  dcsam.update(hfg, initialGuess, initialGuessDiscrete, removals, discreteRemovals);
+
+  EXPECT_EQ(dcsam.getDiscreteFactorGraph().at(5), nullptr);
+  EXPECT_EQ(dcsam.getNonlinearFactorGraph().at(5), nullptr);
+
+  dcvals = dcsam.calculateEstimate();
+
+  mpeClassL1 = dcvals.discrete.at(lc1);
+
+  EXPECT_EQ(mpeClassL1, 0);  
+
+}
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
