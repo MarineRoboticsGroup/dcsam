@@ -14,15 +14,18 @@ option(DCSAM_ENABLE_TESTS "Enable tests" OFF)
 
 # External package dependencies.
 find_package(GTSAM 4.2 REQUIRED)
-find_package(Eigen3 3.3 REQUIRED)
+find_package(Boost REQUIRED)
+# find_package(Eigen3 3.4 REQUIRED)
+
+message(STATUS "Eigen: ${EIGEN_VERSION_MAJOR} ${EIGEN_MINOR_VERSION}")
 
 # add_definitions(-march=native)
-# add_definitions(-std=c++1z)
+# add_definitions(-std=c++17)
 
 add_library(dcsam SHARED)
 target_sources(dcsam PRIVATE src/DCSAM.cpp src/HybridFactorGraph.cpp)
 target_include_directories(dcsam PUBLIC include)
-target_link_libraries(dcsam PUBLIC Eigen3::Eigen gtsam)
+target_link_libraries(dcsam PUBLIC gtsam ${Boost_LIBRARIES})
 target_compile_options(dcsam PRIVATE -Wall -Wpedantic -Wextra)
 
 # Make library accessible to other cmake projects

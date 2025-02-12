@@ -7,16 +7,16 @@
 
 #pragma once
 
-#include <gtsam/discrete/DiscreteFactor.h>
-#include <gtsam/discrete/DiscreteKey.h>
-#include <gtsam/nonlinear/NonlinearFactor.h>
-#include <gtsam/nonlinear/Symbol.h>
 #include <math.h>
-
 #include <algorithm>
 #include <limits>
 #include <memory>
 #include <vector>
+
+#include <gtsam/discrete/DiscreteFactor.h>
+#include <gtsam/discrete/DiscreteKey.h>
+#include <gtsam/nonlinear/NonlinearFactor.h>
+#include <gtsam/nonlinear/Symbol.h>
 
 #include "DCFactor.h"
 #include "DCSAM_types.h"
@@ -40,7 +40,7 @@ namespace dcsam {
 class DCContinuousFactor : public gtsam::NonlinearFactor {
  private:
   gtsam::DiscreteKeys discreteKeys_;
-  boost::shared_ptr<DCFactor> dcfactor_;
+  std::shared_ptr<DCFactor> dcfactor_;
   DiscreteValues discreteVals_;
 
  public:
@@ -48,7 +48,7 @@ class DCContinuousFactor : public gtsam::NonlinearFactor {
 
   DCContinuousFactor() = default;
 
-  explicit DCContinuousFactor(boost::shared_ptr<DCFactor> dcfactor)
+  explicit DCContinuousFactor(std::shared_ptr<DCFactor> dcfactor)
       : discreteKeys_(dcfactor->discreteKeys()), dcfactor_(dcfactor) {
     keys_ = dcfactor->keys();
   }
@@ -58,7 +58,7 @@ class DCContinuousFactor : public gtsam::NonlinearFactor {
     return dcfactor_->error(continuousVals, discreteVals_);
   }
 
-  boost::shared_ptr<gtsam::GaussianFactor> linearize(
+  std::shared_ptr<gtsam::GaussianFactor> linearize(
       const gtsam::Values& continuousVals) const override {
     assert(allInitialized());
     return dcfactor_->linearize(continuousVals, discreteVals_);

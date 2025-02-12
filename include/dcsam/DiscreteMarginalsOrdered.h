@@ -39,22 +39,14 @@ class DiscreteMarginalsOrdered : public gtsam::DiscreteMarginals {
   }
 
   static std::pair<gtsam::DiscreteConditional::shared_ptr,
-                   gtsam::DecisionTreeFactor::shared_ptr>
+                   gtsam::DiscreteFactor::shared_ptr>
   CustomEliminateDiscrete(const gtsam::DiscreteFactorGraph &factors,
                           const gtsam::Ordering &frontalKeys) {
     // PRODUCT: multiply all factors.
-    gtsam::DecisionTreeFactor product;
-    for (auto &factor : factors) {
-      if (!factor) {
-        std::cout << "Null factor in eliminate" << std::endl;
-      } else {
-        // Unsure why factors is getting a nullptr. Try simply ignoring:
-        product = (*factor) * product;
-      }
-    }
+    const auto product = factors.scaledProduct();
 
     // sum out frontals to get the factor on the separator.
-    gtsam::DecisionTreeFactor::shared_ptr sum = product.sum(frontalKeys);
+    const auto sum = product->sum(frontalKeys);
 
     // NOTE: Sum keys seems to be empty often - is this normal?
     // Ordering keys for the conditional so that frontalKeys is in front.
@@ -64,10 +56,11 @@ class DiscreteMarginalsOrdered : public gtsam::DiscreteMarginals {
     orderedKeys.insert(orderedKeys.end(), sum->keys().begin(),
                        sum->keys().end());
 
-    gtsam::DiscreteConditional::shared_ptr cond(
-        new gtsam::DiscreteConditional(product, *sum, orderedKeys));
+    const auto cond = std::make_shared<gtsam::DiscreteConditional>(
+        product->toDecisionTreeFactor(), sum->toDecisionTreeFactor(),
+        orderedKeys);
 
-    return std::make_pair(cond, sum);
+    return {cond, sum};
   }
 };
 

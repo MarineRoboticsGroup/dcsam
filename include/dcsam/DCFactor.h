@@ -7,16 +7,17 @@
 
 #pragma once
 
+#include <math.h>
+#include <algorithm>
+#include <memory>
+#include <limits>
+#include <string>
+#include <vector>
+
 #include <gtsam/discrete/DiscreteFactor.h>
 #include <gtsam/discrete/DiscreteKey.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 #include <gtsam/nonlinear/Symbol.h>
-#include <math.h>
-
-#include <algorithm>
-#include <limits>
-#include <string>
-#include <vector>
 
 #include "dcsam/DCSAM_types.h"
 #include "dcsam/DCSAM_utils.h"
@@ -99,7 +100,7 @@ class DCFactor : public gtsam::Factor {
    * @param discreteVals - Likewise, assignment to the discrete variables in
    * `discreteKeys__`.
    */
-  virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(
+  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const = 0;
 
@@ -196,22 +197,22 @@ class DCFactor : public gtsam::Factor {
     gtsam::Matrix infoMat;
 
     // NOTE: This is sloppy, is there a cleaner way?
-    boost::shared_ptr<NonlinearFactorType> fPtr =
-        boost::make_shared<NonlinearFactorType>(factor);
-    boost::shared_ptr<NonlinearFactorType> factorPtr(fPtr);
+    std::shared_ptr<NonlinearFactorType> fPtr =
+        std::make_shared<NonlinearFactorType>(factor);
+    std::shared_ptr<NonlinearFactorType> factorPtr(fPtr);
 
     // If this is a NoiseModelFactor, we'll use its noiseModel to
     // otherwise noiseModelFactor will be nullptr
-    boost::shared_ptr<gtsam::NoiseModelFactor> noiseModelFactor =
-        boost::dynamic_pointer_cast<gtsam::NoiseModelFactor>(factorPtr);
+    std::shared_ptr<gtsam::NoiseModelFactor> noiseModelFactor =
+        std::dynamic_pointer_cast<gtsam::NoiseModelFactor>(factorPtr);
     if (noiseModelFactor) {
       // If dynamic cast to NoiseModelFactor succeeded, see if the noise model
       // is Gaussian
       gtsam::noiseModel::Base::shared_ptr noiseModel =
           noiseModelFactor->noiseModel();
 
-      boost::shared_ptr<gtsam::noiseModel::Gaussian> gaussianNoiseModel =
-          boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(noiseModel);
+      std::shared_ptr<gtsam::noiseModel::Gaussian> gaussianNoiseModel =
+          std::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(noiseModel);
       if (gaussianNoiseModel) {
         // If the noise model is Gaussian, retrieve the information matrix
         infoMat = gaussianNoiseModel->information();
@@ -220,7 +221,7 @@ class DCFactor : public gtsam::Factor {
         // something with a normalized noise model
         // TODO(kevin): does this make sense to do? I think maybe not in
         // general? Should we just yell at the user?
-        boost::shared_ptr<gtsam::GaussianFactor> gaussianFactor =
+        std::shared_ptr<gtsam::GaussianFactor> gaussianFactor =
             factor.linearize(values);
         infoMat = gaussianFactor->information();
       }

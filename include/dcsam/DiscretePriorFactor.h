@@ -27,7 +27,7 @@ namespace dcsam {
  * with i being 0 or 1. The length of the vector `probs` therefore must be equal
  * to the cardinality of the discrete variable.
  */
-class DiscretePriorFactor : public gtsam::DiscreteFactor {
+class DiscretePriorFactor : public gtsam::DecisionTreeFactor {
  protected:
   gtsam::DiscreteKey dk_;
   std::vector<double> probs_;
@@ -78,7 +78,7 @@ class DiscretePriorFactor : public gtsam::DiscreteFactor {
     return toDecisionTreeFactor() * f;
   }
 
-  double operator()(const DiscreteValues& values) const override {
+  double operator()(const DiscreteValues& values) const {
     size_t assignment = values.at(dk_.first);
     return probs_[assignment];
   }

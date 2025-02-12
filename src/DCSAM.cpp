@@ -8,6 +8,8 @@
 
 #include "dcsam/DCSAM.h"
 
+#include <memory>
+
 #include "dcsam/DCContinuousFactor.h"
 #include "dcsam/DCDiscreteFactor.h"
 #include "dcsam/DiscreteMarginalsOrdered.h"
@@ -65,7 +67,7 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
   for (auto &dcfactor : dcfg) {
     DCDiscreteFactor dcDiscreteFactor(dcfactor);
     auto sharedDiscrete =
-        boost::make_shared<DCDiscreteFactor>(dcDiscreteFactor);
+        std::make_shared<DCDiscreteFactor>(dcDiscreteFactor);
     discreteCombined.push_back(sharedDiscrete);
     dcDiscreteFactors_.push_back(sharedDiscrete);
   }
@@ -84,7 +86,7 @@ void DCSAM::update(const gtsam::NonlinearFactorGraph &graph,
   for (auto &dcfactor : dcfg) {
     DCContinuousFactor dcContinuousFactor(dcfactor);
     auto sharedContinuous =
-        boost::make_shared<DCContinuousFactor>(dcContinuousFactor);
+        std::make_shared<DCContinuousFactor>(dcContinuousFactor);
     sharedContinuous->updateDiscrete(currDiscrete_);
     combined.push_back(sharedContinuous);
     dcContinuousFactors_.push_back(sharedContinuous);
@@ -124,8 +126,8 @@ void DCSAM::updateDiscreteInfo(const gtsam::Values &continuousVals,
                                const DiscreteValues &discreteVals) {
   if (continuousVals.empty()) return;
   for (auto factor : dcDiscreteFactors_) {
-    boost::shared_ptr<DCDiscreteFactor> dcDiscrete =
-        boost::static_pointer_cast<DCDiscreteFactor>(factor);
+    std::shared_ptr<DCDiscreteFactor> dcDiscrete =
+        std::static_pointer_cast<DCDiscreteFactor>(factor);
     dcDiscrete->updateContinuous(continuousVals);
     dcDiscrete->updateDiscrete(discreteVals);
   }
@@ -142,8 +144,8 @@ void DCSAM::updateContinuousInfo(const DiscreteValues &discreteVals,
   gtsam::ISAM2UpdateParams updateParams;
   gtsam::FastMap<gtsam::FactorIndex, gtsam::KeySet> newAffectedKeys;
   for (size_t j = 0; j < dcContinuousFactors_.size(); j++) {
-    boost::shared_ptr<DCContinuousFactor> dcContinuousFactor =
-        boost::static_pointer_cast<DCContinuousFactor>(dcContinuousFactors_[j]);
+    std::shared_ptr<DCContinuousFactor> dcContinuousFactor =
+        std::static_pointer_cast<DCContinuousFactor>(dcContinuousFactors_[j]);
     dcContinuousFactor->updateDiscrete(discreteVals);
     for (const gtsam::Key &k : dcContinuousFactor->keys()) {
       newAffectedKeys[j].insert(k);

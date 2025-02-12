@@ -102,7 +102,7 @@ class DCMixtureFactor : public DCFactor {
             (normalized_ == f.normalized_));
   }
 
-  boost::shared_ptr<gtsam::GaussianFactor> linearize(
+  std::shared_ptr<gtsam::GaussianFactor> linearize(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
     // Retrieve the assignment to our discrete key.

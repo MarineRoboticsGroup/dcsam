@@ -5,6 +5,9 @@
  * Copyright 2021 The Ambitious Folks of the MRG
  */
 
+#include <string>
+#include <memory>
+
 #include "dcsam/HybridFactorGraph.h"
 
 namespace dcsam {
@@ -12,16 +15,16 @@ namespace dcsam {
 HybridFactorGraph::HybridFactorGraph() {}
 
 void HybridFactorGraph::push_nonlinear(
-    boost::shared_ptr<gtsam::NonlinearFactor> nonlinearFactor) {
+    std::shared_ptr<gtsam::NonlinearFactor> nonlinearFactor) {
   nonlinearGraph_.push_back(nonlinearFactor);
 }
 
 void HybridFactorGraph::push_discrete(
-    boost::shared_ptr<gtsam::DiscreteFactor> discreteFactor) {
+    std::shared_ptr<gtsam::DiscreteFactor> discreteFactor) {
   discreteGraph_.push_back(discreteFactor);
 }
 
-void HybridFactorGraph::push_dc(boost::shared_ptr<DCFactor> dcFactor) {
+void HybridFactorGraph::push_dc(std::shared_ptr<DCFactor> dcFactor) {
   dcGraph_.push_back(dcFactor);
 }
 

@@ -8,16 +8,16 @@
 
 #pragma once
 
+#include <algorithm>
+#include <limits>
+#include <memory>
+#include <vector>
+
 #include <gtsam/discrete/DiscreteFactor.h>
 #include <gtsam/discrete/DiscreteKey.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 #include <gtsam/nonlinear/Symbol.h>
 #include <math.h>
-
-#include <algorithm>
-#include <limits>
-#include <memory>
-#include <vector>
 
 #include "DCFactor.h"
 #include "DCSAM_types.h"
@@ -38,21 +38,21 @@ namespace dcsam {
  *
  * The continuous analogue is DCContinuousFactor.
  */
-class DCDiscreteFactor : public gtsam::DiscreteFactor {
+class DCDiscreteFactor : public gtsam::DecisionTreeFactor {
  private:
   gtsam::DiscreteKeys discreteKeys_;
   gtsam::KeyVector continuousKeys_;
-  boost::shared_ptr<DCFactor> dcfactor_;
+  std::shared_ptr<DCFactor> dcfactor_;
   gtsam::Values continuousVals_;
   DiscreteValues discreteVals_;
 
  public:
-  using Base = gtsam::DiscreteFactor;
+  using Base = gtsam::DecisionTreeFactor;
 
   DCDiscreteFactor() = default;
 
   DCDiscreteFactor(const gtsam::DiscreteKeys& discreteKeys,
-                   boost::shared_ptr<DCFactor> dcfactor)
+                   std::shared_ptr<DCFactor> dcfactor)
       : discreteKeys_(discreteKeys),
         continuousKeys_(dcfactor->keys()),
         dcfactor_(dcfactor) {
@@ -61,7 +61,7 @@ class DCDiscreteFactor : public gtsam::DiscreteFactor {
     for (const gtsam::DiscreteKey& k : discreteKeys_) keys_.push_back(k.first);
   }
 
-  explicit DCDiscreteFactor(boost::shared_ptr<DCFactor> dcfactor)
+  explicit DCDiscreteFactor(std::shared_ptr<DCFactor> dcfactor)
       : discreteKeys_(dcfactor->discreteKeys()),
         continuousKeys_(dcfactor->keys()),
         dcfactor_(dcfactor) {
@@ -102,7 +102,7 @@ class DCDiscreteFactor : public gtsam::DiscreteFactor {
     return dcfactor_->conditionalTimes(f, continuousVals_, discreteVals_);
   }
 
-  double operator()(const DiscreteValues& values) const override {
+  double operator()(const DiscreteValues& values) const {
     assert(allInitialized());
     return exp(-dcfactor_->error(continuousVals_, values));
   }

@@ -89,7 +89,7 @@ class SemanticBearingRangeFactor : public DCFactor {
   // dim is the dimension of the underlying bearingrange factor
   size_t dim() const override { return factor_.dim(); }
 
-  boost::shared_ptr<gtsam::GaussianFactor> linearize(
+  std::shared_ptr<gtsam::GaussianFactor> linearize(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
     return factor_.linearize(continuousVals);

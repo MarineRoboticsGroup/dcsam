@@ -120,7 +120,7 @@ class DCMaxMixtureFactor : public DCFactor {
     return ((log_weights_ == f.log_weights_) && (normalized_ == f.normalized_));
   }
 
-  boost::shared_ptr<gtsam::GaussianFactor> linearize(
+  std::shared_ptr<gtsam::GaussianFactor> linearize(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
     size_t min_error_idx = getActiveFactorIdx(continuousVals, discreteVals);

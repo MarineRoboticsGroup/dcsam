@@ -150,10 +150,10 @@ class DCEMFactor : public DCFactor {
   /*
    * Jacobian magic
    */
-  boost::shared_ptr<gtsam::GaussianFactor> linearize(
+  std::shared_ptr<gtsam::GaussianFactor> linearize(
       const gtsam::Values& continuousVals,
       const DiscreteValues& discreteVals) const override {
-    std::vector<boost::shared_ptr<gtsam::GaussianFactor>> gfs;
+    std::vector<std::shared_ptr<gtsam::GaussianFactor>> gfs;
 
     // Start by computing all errors, so we can get the component weights.
     std::vector<double> errors =
@@ -169,7 +169,7 @@ class DCEMFactor : public DCFactor {
     for (size_t i = 0; i < factors_.size(); i++) {
       // std::cout << "i = " << i << std::endl;
       // First get the GaussianFactor obtained by linearizing `factors_[i]`
-      boost::shared_ptr<gtsam::GaussianFactor> gf =
+      std::shared_ptr<gtsam::GaussianFactor> gf =
           factors_[i].linearize(continuousVals, discreteVals);
 
       gtsam::JacobianFactor jf_component(*gf);
@@ -197,7 +197,7 @@ class DCEMFactor : public DCFactor {
 
     // Stack Jacobians to build combined factor.
 
-    return boost::make_shared<gtsam::JacobianFactor>(gfg);
+    return std::make_shared<gtsam::JacobianFactor>(gfg);
   }
 
   gtsam::DecisionTreeFactor toDecisionTreeFactor(
