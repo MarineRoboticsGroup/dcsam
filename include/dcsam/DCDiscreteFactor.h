@@ -102,6 +102,10 @@ class DCDiscreteFactor : public gtsam::DecisionTreeFactor {
     return dcfactor_->conditionalTimes(f, continuousVals_, discreteVals_);
   }
 
+  double evaluate(const gtsam::Assignment<gtsam::Key>& assignment) const override {
+    return operator()(DiscreteValues(assignment));
+  }
+
   double operator()(const DiscreteValues& values) const {
     assert(allInitialized());
     return exp(-dcfactor_->error(continuousVals_, values));

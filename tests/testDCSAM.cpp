@@ -79,24 +79,21 @@ TEST(TestSuite, discrete_prior_factor) {
   dcsam::DiscretePriorFactor dpf(dk, probs);
   dfg.push_back(dpf);
 
-  std::cout << "Pre solve" << std::endl;
   // Solve
   dcsam::DiscreteValues mostProbableEstimate = dfg.optimize();
-
-  std::cout << "solved" << std::endl;
 
   // Get the most probable estimate
   const size_t mpeD = mostProbableEstimate.at(dk.first);
 
   // Get the marginals
-  // gtsam::DiscreteMarginals discreteMarginals(dfg);
-  // gtsam::Vector margProbs = discreteMarginals.marginalProbabilities(dk);
+  gtsam::DiscreteMarginals discreteMarginals(dfg);
+  gtsam::Vector margProbs = discreteMarginals.marginalProbabilities(dk);
 
   // Verify that each marginal probability is within `tol` of the true marginal
-  // for (size_t i = 0; i < dk.second; i++) {
-  //   bool margWithinTol = (abs(margProbs[i] - probs[i]) < tol);
-  //   EXPECT_EQ(margWithinTol, true);
-  // }
+  for (size_t i = 0; i < dk.second; i++) {
+    bool margWithinTol = (abs(margProbs[i] - probs[i]) < tol);
+    EXPECT_EQ(margWithinTol, true);
+  }
 
   // Ensure that the most probable estimate is correct
   EXPECT_EQ(mpeD, 1);
@@ -146,6 +143,8 @@ TEST(TestSuite, smart_discrete_prior_factor) {
   const std::vector<double> newProbs{0.9, 0.1};
   std::shared_ptr<dcsam::SmartDiscretePriorFactor> smart =
       std::dynamic_pointer_cast<dcsam::SmartDiscretePriorFactor>(dfg[0]);
+  EXPECT_TRUE(smart != nullptr);
+
   if (smart) smart->updateProbs(newProbs);
 
   // Solve
@@ -160,8 +159,8 @@ TEST(TestSuite, smart_discrete_prior_factor) {
 
   // Verify that each marginal probability is within `tol` of the true marginal
   for (size_t i = 0; i < dk.second; i++) {
-    bool margWithinTol = (abs(newMargProbs[i] - newProbs[i]) < tol);
-    EXPECT_EQ(margWithinTol, true);
+    double abs_marg_error = abs(newMargProbs[i] - newProbs[i]);
+    EXPECT_LT(abs_marg_error, tol);
   }
 
   // Ensure that the prediction is correct

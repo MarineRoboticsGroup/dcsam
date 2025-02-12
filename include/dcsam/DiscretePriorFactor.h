@@ -29,17 +29,17 @@ namespace dcsam {
  */
 class DiscretePriorFactor : public gtsam::DecisionTreeFactor {
  protected:
-  gtsam::DiscreteKey dk_;
+  std::vector<gtsam::DiscreteKey> dk_;
   std::vector<double> probs_;
 
  public:
-  using Base = gtsam::DiscreteFactor;
+  using Base = gtsam::DecisionTreeFactor;
 
   DiscretePriorFactor() = default;
 
   DiscretePriorFactor(const gtsam::DiscreteKey& dk,
                       const std::vector<double> probs)
-      : dk_(dk), probs_(probs) {
+    : Base({dk}, probs), dk_({dk}), probs_(probs) {
     // Ensure that length of probs is equal to the cardinality of the discrete
     // variable (for gtsam::DiscreteKey dk, dk.second is the cardinality).
     assert(probs.size() == dk.second);
@@ -78,8 +78,12 @@ class DiscretePriorFactor : public gtsam::DecisionTreeFactor {
     return toDecisionTreeFactor() * f;
   }
 
+  double evaluate(const gtsam::Assignment<gtsam::Key>& assignment) const override {
+    return this->operator()(gtsam::DiscreteValues(assignment));
+  }
+
   double operator()(const DiscreteValues& values) const {
-    size_t assignment = values.at(dk_.first);
+    size_t assignment = values.at(dk_[0].first);
     return probs_[assignment];
   }
 

@@ -33,6 +33,8 @@ class SmartDiscretePriorFactor : public DiscretePriorFactor {
   void updateProbs(const std::vector<double>& probs) {
     assert(probs.size() == probs_.size());
     probs_ = probs;
+    root_ =
+        Base::create(dk_.begin(), dk_.end(), probs_.begin(), probs_.end());
   }
 
   std::string markdown(const gtsam::KeyFormatter& keyFormatter,
