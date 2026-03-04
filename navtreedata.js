@@ -26,8 +26,8 @@ var NAVTREE =
 [
   [ "dcsam", "index.html", [
     [ "dcsam", "md__r_e_a_d_m_e.html", [
+      [ "References", "md__r_e_a_d_m_e.html#autotoc_md1", null ],
       [ "Prerequisites", "md__r_e_a_d_m_e.html#autotoc_md2", [
-        [ "References", "md__r_e_a_d_m_e.html#autotoc_md1", null ],
         [ "Optional", "md__r_e_a_d_m_e.html#autotoc_md3", null ]
       ] ],
       [ "Building", "md__r_e_a_d_m_e.html#autotoc_md4", [
@@ -70,7 +70,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "_d_c_continuous_factor_8h.html",
-"test_d_c_s_a_m_8cpp.html#a53d34558abadfe34402b6f659bbf481b"
+"classdcsam_1_1_d_c_s_a_m.html#a3febe76ebb9c64e4d035ad26e9fd15c3"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

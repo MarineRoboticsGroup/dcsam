@@ -7,6 +7,7 @@ var classdcsam_1_1_d_c_mixture_factor =
     [ "dim", "classdcsam_1_1_d_c_mixture_factor.html#ac0423beb393eb7b420b57f02e9680dfe", null ],
     [ "equals", "classdcsam_1_1_d_c_mixture_factor.html#adf41e0ef495bad0f9a0888ec77e57726", null ],
     [ "error", "classdcsam_1_1_d_c_mixture_factor.html#a694bf498b2933490bf6377522ee1bfe4", null ],
-    [ "linearize", "classdcsam_1_1_d_c_mixture_factor.html#a17e2a6c1994cdd211f7fd3d9b9d73cce", null ],
-    [ "operator=", "classdcsam_1_1_d_c_mixture_factor.html#a632a6c9cd67c99bd6bc07404e80ea5b5", null ]
+    [ "linearize", "classdcsam_1_1_d_c_mixture_factor.html#a38780baf5e2993a7197241de215faa48", null ],
+    [ "operator=", "classdcsam_1_1_d_c_mixture_factor.html#a58329709b8a33ca0add395637c0e146a", null ],
+    [ "print", "classdcsam_1_1_d_c_mixture_factor.html#ac193b866eeb77a8c60459f281e472bfa", null ]
 ];
